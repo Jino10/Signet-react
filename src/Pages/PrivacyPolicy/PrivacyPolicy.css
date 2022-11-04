@@ -1,0 +1,34 @@
+.logo {
+  width: 200px;
+  padding-bottom: 20px;
+  padding-top: 20px;
+}
+.rightBox {
+  width: 100%;
+}
+.policy {
+  color: #000;
+  width: 95%;
+  padding: 10px;
+  text-align: justify;
+  margin-bottom: 0 !important;
+}
+.subTitle {
+  width: 95% !important;
+  padding: 10px;
+  text-align: start;
+  color: #2a6ebb;
+  font-weight: 600;
+  margin-bottom: 0 !important;
+}
+.address {
+  width: 95% !important;
+  padding: 10px;
+  padding-left: 50px;
+}
+.listBold {
+  font-weight: 600;
+}
+.listStyle-none {
+  list-style: none;
+}

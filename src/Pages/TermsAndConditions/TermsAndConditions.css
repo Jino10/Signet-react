@@ -1,0 +1,14 @@
+.logo {
+  width: 200px;
+  padding-bottom: 20px;
+  padding-top: 20px;
+}
+.rightBox {
+  width: 100%;
+}
+.policy {
+  color: #000;
+  width: 95%;
+  padding: 10px;
+  text-align: justify;
+}

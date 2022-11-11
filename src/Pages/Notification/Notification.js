@@ -28,7 +28,7 @@ export default function Notification() {
   const fetchNotifications = async (pageNo) => {
     setIsLoading(true);
     dispatch(notificationData({ pageNo, organizationName }));
-    if (notifyStatus !== null && Array.isArray(notificationValues) || notificationValues !== []) {
+    if ((notifyStatus !== null && Array.isArray(notificationValues)) || notificationValues !== []) {
       if (notifyStatus === httpStatusCode.SUCCESS) {
         dispatch(setDefaultStatus());
         setIsLoading(false);
@@ -64,11 +64,7 @@ export default function Notification() {
 
   return (
     <div className="wrapperBase">
-      <Alerts
-        variant={variant}
-        onClose={handleClose}
-        alertshow={alertMessage}
-      />
+      <Alerts variant={variant} onClose={handleClose} alertshow={alertMessage} />
       {isLoading ? (
         <Loading />
       ) : (

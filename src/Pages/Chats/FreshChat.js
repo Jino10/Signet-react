@@ -77,14 +77,14 @@ export async function initFCWidget() {
   window.fcWidget.user.setProperties({
     Organization: orgName,
   });
-  window.fcWidget.on('widget:opened', () => { });
+  window.fcWidget.on('widget:opened', () => {});
 
-  window.fcWidget.on('widget:loaded', () => { });
+  window.fcWidget.on('widget:loaded', () => {});
 
   window.fcWidget.on('widget:closed', () => {
     messageService.sendMessage(true);
   });
-  window.fcWidget.user.get(() => { });
+  window.fcWidget.user.get(() => {});
 
   window.fcWidget.on('user:created', (resp) => {
     const status = resp && resp.status;

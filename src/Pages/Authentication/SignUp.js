@@ -96,7 +96,7 @@ function SignUp() {
       'sign-in-button',
       {
         size: 'invisible',
-        callback: () => { },
+        callback: () => {},
       },
       authentication,
     );

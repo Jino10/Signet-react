@@ -79,7 +79,7 @@ export default function OTPVerification() {
       'sign-in-button',
       {
         size: 'invisible',
-        callback: () => { },
+        callback: () => {},
       },
       authentication,
     );

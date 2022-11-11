@@ -74,7 +74,7 @@ export default function Profile() {
       'mobile-number-button',
       {
         size: 'invisible',
-        callback: () => { },
+        callback: () => {},
       },
       authentication,
     );
@@ -390,8 +390,9 @@ export default function Profile() {
                 {!isEditable && (
                   <a
                     className="feedBackBtn"
-                    href={`mailto:${emailTo}?subject=${`Feedback from ${user?.firstName} ${user?.lastName}` || ''}&body=${encodeURIComponent(`User Email : ${user.emailId}\n\n`) || ''
-                      }`}
+                    href={`mailto:${emailTo}?subject=${`Feedback from ${user?.firstName} ${user?.lastName}` || ''}&body=${
+                      encodeURIComponent(`User Email : ${user.emailId}\n\n`) || ''
+                    }`}
                   >
                     Feedback
                   </a>

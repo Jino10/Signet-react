@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button, Form, Alert } from 'react-bootstrap';
 import './Announcement.css';
-import {gaEvents, httpStatusCode } from '../../Constants/TextConstants';
+import { gaEvents, httpStatusCode } from '../../Constants/TextConstants';
 import 'react-toastify/dist/ReactToastify.css';
 import Loading from '../Widgets/Loading';
 import { Editor } from 'react-draft-wysiwyg';

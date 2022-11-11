@@ -49,7 +49,7 @@ function Tickets() {
         }, 5000);
       }
     }
-  }, [apiStatus])
+  }, [apiStatus]);
 
   const handleClick = (ticketId) => {
     buttonTracker(gaEvents.NAVIGATE_EDIT_TICKET);

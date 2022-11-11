@@ -140,13 +140,7 @@ function Login() {
 
   return (
     <Container fluid className="lognWrapper">
-      {alertShow && (
-        <Alerts
-          variant="danger"
-          onClose={handleClose}
-          alertshow={alertMessage}
-        />
-      )}
+      {alertShow && <Alerts variant="danger" onClose={handleClose} alertshow={alertMessage} />}
       {isLoading && <Loading />}
       {loading && <Loading />}
       <Row>

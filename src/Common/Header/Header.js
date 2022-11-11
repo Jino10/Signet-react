@@ -45,7 +45,7 @@ export default function Header() {
 
   const fetchNotifications = async () => {
     dispatch(fetchNotifyData(organizationName));
-    if (listNotifyStatus !== null && Array.isArray(listNotifyData) || listNotifyData !== []) {
+    if ((listNotifyStatus !== null && Array.isArray(listNotifyData)) || listNotifyData !== []) {
       if (listNotifyStatus === 200) {
         dispatch(setLogin());
         const ids = [];
@@ -53,8 +53,7 @@ export default function Header() {
         setUnseenNotification(listNotifyData.data.unSeenList);
         setLiveNotification([]);
         listNotifyData.data.unSeenList.length > 0 && listNotifyData.data.unSeenList.map((item) => ids.push(item.id));
-        ids.length > 0 &&
-          dispatch(removeNotifyData(ids));
+        ids.length > 0 && dispatch(removeNotifyData(ids));
       } else {
         setShowAlert(true);
         setAlertMessage(error);

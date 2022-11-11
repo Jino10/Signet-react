@@ -71,7 +71,7 @@ function GetSSOUserdetails() {
   }, [navigate]);
 
   useEffect(() => {
-    if (apiStatus !== null && Array.isArray(ssoUserData) || ssoUserData !== []) {
+    if ((apiStatus !== null && Array.isArray(ssoUserData)) || ssoUserData !== []) {
       const res = ssoUserData.data;
       if (apiStatus === httpStatusCode.SUCCESS) {
         dispatch(setDefaultStatus());
@@ -225,7 +225,7 @@ function GetSSOUserdetails() {
       'sign-in-button',
       {
         size: 'invisible',
-        callback: () => { },
+        callback: () => {},
       },
       authentication,
     );

@@ -42,7 +42,9 @@ export default function EditUser() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  const { roleStatus, roleDatas, orgData, apiStatus, userFetchData, updateStatus, updateData, errMsg } = useSelector((state) => state.user);
+  const { roleStatus, roleDatas, orgData, apiStatus, userFetchData, updateStatus, updateData, errMsg } = useSelector(
+    (state) => state.user,
+  );
 
   const {
     register,
@@ -105,7 +107,7 @@ export default function EditUser() {
   }, [id, reset]);
 
   useEffect(() => {
-    if (apiStatus !== null && Array.isArray(userFetchData) || userFetchData !== []) {
+    if ((apiStatus !== null && Array.isArray(userFetchData)) || userFetchData !== []) {
       if (apiStatus === httpStatusCode.SUCCESS) {
         dispatch(setDefault());
         const userValues = {

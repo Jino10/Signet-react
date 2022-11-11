@@ -7,7 +7,14 @@ import { gaEvents, httpStatusCode } from '../../Constants/TextConstants';
 import useAnalyticsEventTracker from '../../Hooks/useAnalyticsEventTracker';
 import moment from 'moment-timezone';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchPriorityData, fetchProblemData, fetchSiteData, fetchSystemData, fetchTicketData, ticketsUpdate } from '../../Redux-Toolkit/ticketSlice/action';
+import {
+  fetchPriorityData,
+  fetchProblemData,
+  fetchSiteData,
+  fetchSystemData,
+  fetchTicketData,
+  ticketsUpdate,
+} from '../../Redux-Toolkit/ticketSlice/action';
 import { setTickets } from '../../Redux-Toolkit/ticketSlice';
 
 export default function AddTicket() {
@@ -48,7 +55,7 @@ export default function AddTicket() {
   const [apiErrorMsg, setApiErrorMsg] = useState('');
   const dispatch = useDispatch();
 
-  const { siteList, priorityList, problemList, systemList, dataList, apiStatus,error } = useSelector((state) => state.ticket);
+  const { siteList, priorityList, problemList, systemList, dataList, apiStatus, error } = useSelector((state) => state.ticket);
 
   const getDate = () => {
     const format = 'YYYY-MM-DD HH:mm';
@@ -139,7 +146,12 @@ export default function AddTicket() {
   };
 
   useEffect(() => {
-    if (Array.isArray(siteList) && Array.isArray(priorityList) && Array.isArray(problemList) && (Array.isArray(systemList) || Array.isArray(dataList))) {
+    if (
+      Array.isArray(siteList) &&
+      Array.isArray(priorityList) &&
+      Array.isArray(problemList) &&
+      (Array.isArray(systemList) || Array.isArray(dataList))
+    ) {
       if (siteList && priorityList && problemList && (systemList || dataList)) {
         fetchPromise();
       }
@@ -180,7 +192,6 @@ export default function AddTicket() {
     }
     if (PostObject.description && PostObject.site && PostObject.callerEmail === localStorage.getItem('email') && noApiError) {
       dispatch(ticketsUpdate(ticketObject));
-
     } else if (PostObject.callerEmail !== localStorage.getItem('email')) {
       setShowAlert(true);
       setAlertVarient('danger');

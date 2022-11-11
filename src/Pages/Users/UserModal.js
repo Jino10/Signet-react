@@ -46,7 +46,8 @@ function UserModal({ userId, successCallback }) {
 
   const dispatch = useDispatch();
 
-  const { apiStatus, userFullData, roleStatus, roleDatas, userDetailStatus, orgData, newUserData, newApiStatus, errMsg } = useSelector((state) => state.user);
+  const { apiStatus, userFullData, roleStatus, roleDatas, userDetailStatus, orgData, newUserData, newApiStatus, errMsg } =
+    useSelector((state) => state.user);
 
   const customStyles = {
     control: (base) => ({
@@ -112,7 +113,7 @@ function UserModal({ userId, successCallback }) {
   }, [userId]);
 
   useEffect(() => {
-    if (userDetailStatus !== null && Array.isArray(userFullData) || userFullData !== []) {
+    if ((userDetailStatus !== null && Array.isArray(userFullData)) || userFullData !== []) {
       if (userDetailStatus === httpStatusCode.SUCCESS && userFullData.status !== 'Active') {
         dispatch(setDefault());
         setShowCreateUserModal(true);
@@ -195,7 +196,6 @@ function UserModal({ userId, successCallback }) {
         buttonTracker(gaEvents.CREATE_USER);
       }
       dispatch(createUser({ endPoint, user }));
-
     } else if (userRole.length === 0 || userRole === 'Select Role') {
       setRoleValidated(true);
       localStorage.removeItem('userId');

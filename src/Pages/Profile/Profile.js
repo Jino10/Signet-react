@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button, Form, Container, Alert } from 'react-bootstrap';
 import './Profile.css';
-import APIUrlConstants from '../../Config/APIUrlConstants';
-import { apiMethods, gaEvents, httpStatusCode } from '../../Constants/TextConstants';
-import { fetchCall } from '../../Services/APIService';
+import { gaEvents, httpStatusCode } from '../../Constants/TextConstants';
 import Alerts from '../Widgets/Alerts';
 import Loading from '../Widgets/Loading';
 import { authentication } from '../../Config/FirebaseConfig';
@@ -11,9 +9,10 @@ import { RecaptchaVerifier, signInWithPhoneNumber } from 'firebase/auth';
 import { useNavigate } from 'react-router-dom';
 import { userRoleId, roleId } from '../../Utilities/AppUtilities';
 import { useDispatch, useSelector } from 'react-redux';
-import { updateUser } from '../../Redux/Actions/Actions';
 import useAnalyticsEventTracker from '../../Hooks/useAnalyticsEventTracker';
 import ReactGA from 'react-ga4';
+import { setTickets } from '../../Redux-Toolkit/ticketSlice';
+import { profileUpdate } from '../../Redux-Toolkit/ticketSlice/action';
 
 export default function Profile() {
   const [isEditable, setIsEditable] = useState(false);
@@ -40,9 +39,10 @@ export default function Profile() {
   const emailTo = 'appsupport@signetgroup.net';
   const phoneNumber = '+1' + phone;
   const navigate = useNavigate();
-  const state = useSelector((stateR) => stateR.UserReducer);
   const dispatch = useDispatch();
   const { buttonTracker } = useAnalyticsEventTracker();
+
+  const { profileData, profileStatus, loading, error } = useSelector((state) => state.ticket);
 
   function formatPhoneNumber(x) {
     const formated = x.replace(/\D+/g, '').replace(/(\d{3})(\d{3})(\d{4})/, '($1) $2-$3');
@@ -74,7 +74,7 @@ export default function Profile() {
       'mobile-number-button',
       {
         size: 'invisible',
-        callback: () => {},
+        callback: () => { },
       },
       authentication,
     );
@@ -148,64 +148,57 @@ export default function Profile() {
   };
 
   const updateUserDetails = async (userDetails) => {
-    const { 0: status, 1: data } = await fetchCall(APIUrlConstants.UPDATE_PROFILE, apiMethods.POST, userDetails);
-    const statusCode = status;
-    const responseData = data;
-
-    if (statusCode === httpStatusCode.SUCCESS) {
-      setAlertMessage('Profile updated successfully');
-      setShowAlert(true);
-      setAlertVarient('success');
-      setUser((prevState) => ({
-        ...prevState,
-        firstName: responseData.data.firstName,
-        lastName: responseData.data.lastName,
-        emailId: responseData.data.orgEmail,
-        mobileNumber: responseData.data.mobileNumber,
-        orgName: responseData.data.organization,
-      }));
-      localStorage.setItem(
-        'user',
-        JSON.stringify({
-          ...user,
-          firstName: responseData.data.firstName,
-          lastName: responseData.data.lastName,
-          emailId: responseData.data.orgEmail,
-          mobileNumber: responseData.data.mobileNumber,
-          orgName: responseData.data.organization,
-        }),
-      );
-      localStorage.setItem('firstName', responseData.data.firstName);
-      localStorage.setItem('lastName', responseData.data.lastName);
-      localStorage.setItem('email', responseData.data.orgEmail);
-      localStorage.setItem('mobile', responseData.data.mobileNumber);
-      localStorage.setItem('orgName', responseData.data.organization);
-      dispatch(
-        updateUser({
-          ...state.user,
-          firstName: responseData.data.firstName,
-          lastName: responseData.data.lastName,
-          orgEmail: responseData.data.orgEmail,
-          mobileNumber: responseData.data.mobileNumber,
-          orgName: responseData.data.organization,
-        }),
-      );
-      setIsLoading(false);
-      setOtp('');
-      setTimeout(() => {
-        closeAlert();
-      }, 5000);
-    } else {
-      setShowAlert(true);
-      setAlertVarient('danger');
-      setAlertMessage(responseData.message ?? 'something went wrong ');
-      setIsLoading(false);
-      setTimeout(() => {
-        closeAlert();
-      }, 5000);
-    }
-    setIsEditable(false);
+    dispatch(profileUpdate(userDetails));
   };
+
+  useEffect(() => {
+    if (profileStatus !== null) {
+      if (profileStatus === httpStatusCode.SUCCESS) {
+        dispatch(setTickets());
+        setAlertMessage('Profile updated successfully');
+        setShowAlert(true);
+        setAlertVarient('success');
+        setUser((prevState) => ({
+          ...prevState,
+          firstName: profileData.firstName,
+          lastName: profileData.lastName,
+          emailId: profileData.orgEmail,
+          mobileNumber: profileData.mobileNumber,
+          orgName: profileData.organization,
+        }));
+        localStorage.setItem(
+          'user',
+          JSON.stringify({
+            ...user,
+            firstName: profileData.firstName,
+            lastName: profileData.lastName,
+            emailId: profileData.orgEmail,
+            mobileNumber: profileData.mobileNumber,
+            orgName: profileData.organization,
+          }),
+        );
+        localStorage.setItem('firstName', profileData.firstName);
+        localStorage.setItem('lastName', profileData.lastName);
+        localStorage.setItem('email', profileData.orgEmail);
+        localStorage.setItem('mobile', profileData.mobileNumber);
+        localStorage.setItem('orgName', profileData.organization);
+        setIsLoading(false);
+        setOtp('');
+        setTimeout(() => {
+          closeAlert();
+        }, 5000);
+      } else {
+        setShowAlert(true);
+        setAlertVarient('danger');
+        setAlertMessage(error);
+        setIsLoading(false);
+        setTimeout(() => {
+          closeAlert();
+        }, 5000);
+      }
+      setIsEditable(false);
+    }
+  }, [profileStatus]);
 
   const handleSubmit = async () => {
     if (user.firstName.length > 0 && user.lastName.length > 0 && user.mobileNumber) {
@@ -266,6 +259,7 @@ export default function Profile() {
       <div className="wrapperBase baseBg">
         <div className="wrapperCard">
           {isLoading && <Loading />}
+          {loading && <Loading />}
           <div className="wrapperCard--body">
             <div className="formWrap">
               <div className="titleHeader">
@@ -396,9 +390,8 @@ export default function Profile() {
                 {!isEditable && (
                   <a
                     className="feedBackBtn"
-                    href={`mailto:${emailTo}?subject=${`Feedback from ${user?.firstName} ${user?.lastName}` || ''}&body=${
-                      encodeURIComponent(`User Email : ${user.emailId}\n\n`) || ''
-                    }`}
+                    href={`mailto:${emailTo}?subject=${`Feedback from ${user?.firstName} ${user?.lastName}` || ''}&body=${encodeURIComponent(`User Email : ${user.emailId}\n\n`) || ''
+                      }`}
                   >
                     Feedback
                   </a>

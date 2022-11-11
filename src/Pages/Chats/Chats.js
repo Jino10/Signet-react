@@ -1,14 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import APIUrlConstants from '../../Config/APIUrlConstants';
-import { fetchCall } from '../../Services/APIService';
-import { apiMethods, gaEvents, httpStatusCode } from '../../Constants/TextConstants';
+import { gaEvents, httpStatusCode } from '../../Constants/TextConstants';
 import { hidefcWidget, initFCWidget, showfcWidget } from './FreshChat';
 import { userRoleId } from '../../Utilities/AppUtilities';
 import './Chats.css';
 import Loading from '../Widgets/Loading';
 import { Button } from 'react-bootstrap';
 import useAnalyticsEventTracker from '../../Hooks/useAnalyticsEventTracker';
+import { useDispatch, useSelector } from 'react-redux';
+import { setDefaultStatus } from '../../Redux-Toolkit/sessionSlice';
+import { chartData } from '../../Redux-Toolkit/sessionSlice/action';
 
 export default function Chats() {
   const location = useLocation();
@@ -16,6 +17,10 @@ export default function Chats() {
   const [isLoading, setIsLoading] = useState(location.state != null ? location.state.showLoader : true);
   const roledId = localStorage.getItem('roleId');
   const { buttonTracker } = useAnalyticsEventTracker();
+  const dispatch = useDispatch();
+
+  const { apiStatus } = useSelector((state) => state.session);
+
   useEffect(() => {
     if (roledId === userRoleId.remoteSmartUser) {
       if (!window.fcWidget.isInitialized()) {
@@ -44,12 +49,18 @@ export default function Chats() {
   );
   /* Component cleanup function call end  */
   const handleClick = async () => {
-    const [statusCode] = await fetchCall(APIUrlConstants.CONTACT_SALES + '/' + localStorage.getItem('id'), apiMethods.POST, {});
-    if (statusCode === httpStatusCode.SUCCESS) {
-      setSnackBar(true);
-      localStorage.setItem('contactSales', 'true');
-    }
+    dispatch(chartData());
   };
+
+  useEffect(() => {
+    if (apiStatus !== null) {
+      if (apiStatus === httpStatusCode.SUCCESS) {
+        dispatch(setDefaultStatus());
+        setSnackBar(true);
+        localStorage.setItem('contactSales', 'true');
+      }
+    }
+  }, [apiStatus]);
 
   return (
     <div className="wrapperBase">

@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { Alert, Button, Form, Modal } from 'react-bootstrap';
-import { apiMethods, gaEvents, httpStatusCode } from '../../Constants/TextConstants';
-import { fetchCall, makeRequest } from '../../Services/APIService';
+import { gaEvents, httpStatusCode } from '../../Constants/TextConstants';
 import APIUrlConstants from '../../Config/APIUrlConstants';
 import emailValidator from '../../EmailValidator';
 import Alerts from '../Widgets/Alerts';
@@ -9,6 +8,9 @@ import Loading from '../Widgets/Loading';
 import AsyncSelect from 'react-select/async';
 import { useNavigate, useLocation } from 'react-router-dom';
 import useAnalyticsEventTracker from '../../Hooks/useAnalyticsEventTracker';
+import { useDispatch, useSelector } from 'react-redux';
+import { createUser, fetchOrg, fetchUserRole, userDetails } from '../../Redux-Toolkit/userSlice/action';
+import { setDefault } from '../../Redux-Toolkit/userSlice';
 
 function UserModal({ userId, successCallback }) {
   const { buttonTracker, linkTracker } = useAnalyticsEventTracker();
@@ -41,6 +43,10 @@ function UserModal({ userId, successCallback }) {
     setShowCreateUserModal(true);
     buttonTracker(gaEvents.OPEN_CREATE_USER);
   };
+
+  const dispatch = useDispatch();
+
+  const { apiStatus, userFullData, roleStatus, roleDatas, userDetailStatus, orgData, newUserData, newApiStatus, errMsg } = useSelector((state) => state.user);
 
   const customStyles = {
     control: (base) => ({
@@ -90,9 +96,9 @@ function UserModal({ userId, successCallback }) {
 
   const loadOptions = async (searchtext) => {
     if (searchtext.length >= 3) {
-      const response = await makeRequest(`${APIUrlConstants.SEARCH_ORG}?company=${searchtext}`);
-      const statusCode = response[0];
-      const responseData = response[1];
+      dispatch(fetchOrg(searchtext));
+      const statusCode = orgData[0];
+      const responseData = orgData[1];
       if (httpStatusCode.SUCCESS === statusCode) {
         return responseData.data;
       }
@@ -102,35 +108,46 @@ function UserModal({ userId, successCallback }) {
   };
 
   const fetchUserDetails = useCallback(async () => {
-    const { 0: status, 1: data } = await makeRequest(`${APIUrlConstants.GET_USER_DETAILS}/${userId}`);
-    const result = data;
-    if (status === httpStatusCode.SUCCESS && result.data.status !== 'Active') {
-      setShowCreateUserModal(true);
-      setUserLastName(result.data.lastName);
-      setUserFirstName(result.data.firstName);
-      setUserOrg(result.data.organization);
-      setOrgMail(result.data.orgEmail);
-    } else if (status === httpStatusCode.SUCCESS && result.data.status === 'Active') {
-      setShowAlert(true);
-      setAlertMessage('User already active');
-      setAlertVarient('danger');
-      setIsLoading(false);
-      setTimeout(() => {
-        closeCreateUserModal();
-        closeAlert();
-        clearState();
-      }, 5000);
-    }
+    dispatch(userDetails(userId));
   }, [userId]);
 
-  const fetchRoles = async () => {
-    const { 0: status, 1: res } = await makeRequest(APIUrlConstants.GET_USER_ROLES);
-
-    const result = res.data;
-    if (status === httpStatusCode.SUCCESS) {
-      setRoles(result);
+  useEffect(() => {
+    if (userDetailStatus !== null && Array.isArray(userFullData) || userFullData !== []) {
+      if (userDetailStatus === httpStatusCode.SUCCESS && userFullData.status !== 'Active') {
+        dispatch(setDefault());
+        setShowCreateUserModal(true);
+        setUserLastName(userFullData.lastName);
+        setUserFirstName(userFullData.firstName);
+        setUserOrg(userFullData.organization);
+        setOrgMail(userFullData.orgEmail);
+      } else if (userDetailStatus === httpStatusCode.SUCCESS && userFullData.status === 'Active') {
+        dispatch(setDefault());
+        setShowAlert(true);
+        setAlertMessage('User already active');
+        setAlertVarient('danger');
+        setIsLoading(false);
+        setTimeout(() => {
+          closeCreateUserModal();
+          closeAlert();
+          clearState();
+        }, 5000);
+      }
     }
+  }, [userDetailStatus]);
+
+  const fetchRoles = async () => {
+    dispatch(fetchUserRole());
   };
+
+  useEffect(() => {
+    if (roleStatus !== null) {
+      if (roleStatus === httpStatusCode.SUCCESS) {
+        dispatch(setDefault());
+        setRoles(roleDatas);
+      }
+    }
+  }, [roleStatus]);
+
   useEffect(() => {
     if (userId && location.pathname !== '/users') {
       fetchUserDetails();
@@ -177,11 +194,24 @@ function UserModal({ userId, successCallback }) {
       } else {
         buttonTracker(gaEvents.CREATE_USER);
       }
-      const { 0: statusCode, 1: responseData } = await fetchCall(endPoint, apiMethods.POST, user);
+      dispatch(createUser({ endPoint, user }));
 
-      if (statusCode === httpStatusCode.SUCCESS) {
+    } else if (userRole.length === 0 || userRole === 'Select Role') {
+      setRoleValidated(true);
+      localStorage.removeItem('userId');
+      setIsLoading(false);
+    } else {
+      setIsLoading(false);
+    }
+    setValidated(true);
+  };
+
+  useEffect(() => {
+    if (newApiStatus !== null) {
+      if (newApiStatus === httpStatusCode.SUCCESS) {
+        dispatch(setDefault());
         setShowAlert(true);
-        setAlertMessage(responseData.message);
+        setAlertMessage(newUserData.message);
         setAlertVarient('success');
         successCallback();
         localStorage.removeItem('userId');
@@ -193,7 +223,7 @@ function UserModal({ userId, successCallback }) {
         }, 5000);
       } else {
         setShowAlert(true);
-        setAlertMessage(responseData.message);
+        setAlertMessage(errMsg);
         setAlertVarient('danger');
         localStorage.removeItem('userId');
         setIsLoading(false);
@@ -203,15 +233,8 @@ function UserModal({ userId, successCallback }) {
           clearState();
         }, 5000);
       }
-    } else if (userRole.length === 0 || userRole === 'Select Role') {
-      setRoleValidated(true);
-      localStorage.removeItem('userId');
-      setIsLoading(false);
-    } else {
-      setIsLoading(false);
     }
-    setValidated(true);
-  };
+  }, [newApiStatus]);
 
   const handleClose = () => setShowWarning(false);
 

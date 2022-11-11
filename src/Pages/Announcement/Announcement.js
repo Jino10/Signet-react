@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button, Form, Alert } from 'react-bootstrap';
 import './Announcement.css';
-import { makeRequest, fetchCall } from '../../Services/APIService';
-import APIUrlConstants from '../../Config/APIUrlConstants';
-import { apiMethods, gaEvents, httpStatusCode } from '../../Constants/TextConstants';
+import {gaEvents, httpStatusCode } from '../../Constants/TextConstants';
 import 'react-toastify/dist/ReactToastify.css';
 import Loading from '../Widgets/Loading';
 import { Editor } from 'react-draft-wysiwyg';
@@ -11,6 +9,8 @@ import 'react-draft-wysiwyg/dist/react-draft-wysiwyg.css';
 import { EditorState, convertToRaw } from 'draft-js';
 import draftToHtml from 'draftjs-to-html';
 import useAnalyticsEventTracker from '../../Hooks/useAnalyticsEventTracker';
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchOrgNames, postData } from '../../Redux-Toolkit/userSlice/action';
 
 export default function Announcement() {
   const [optionval, setOptionval] = useState('all');
@@ -29,15 +29,20 @@ export default function Announcement() {
   const [editorState, setEditorState] = useState(EditorState.createEmpty());
   const { buttonTracker } = useAnalyticsEventTracker();
 
+  const dispatch = useDispatch();
+
+  const { orgNames, postValues } = useSelector((state) => state.user);
+
+  // console.log(convertToRaw(editorState.getCurrentContent()));
   const handleClose = () => {
     setShow(false);
     window.location = '/announcement';
   };
 
   const fetchOrgName = async (searchtext) => {
-    const response = await makeRequest(`${APIUrlConstants.GET_ORG_NAME}?orgName=${searchtext}`);
-    const statusCode = response[0];
-    const responseData = response[1];
+    dispatch(fetchOrgNames(searchtext));
+    const statusCode = orgNames[0];
+    const responseData = orgNames[1];
     if (httpStatusCode.SUCCESS === statusCode) {
       setPosts(responseData.data);
     }
@@ -45,12 +50,9 @@ export default function Announcement() {
   };
 
   const postNotification = async () => {
-    const response = await fetchCall(APIUrlConstants.POST_NOTIFICATION_API, apiMethods.POST, {
-      alertMessage: optionval === 'all' ? msg : message,
-      orgName: optionval === 'all' ? 'All' : search,
-    });
-    const statusCode = response[0];
-    const responseData = response[1];
+    dispatch(postData({ optionval, msg, search, message }));
+    const statusCode = postValues[0];
+    const responseData = postValues[1];
     setIsLoading(true);
     buttonTracker(gaEvents.SEND_ANNOUNCEMENT);
     if (httpStatusCode.SUCCESS === statusCode) {

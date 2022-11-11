@@ -1,11 +1,9 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { Button, Col, Container, Form, Row, Modal } from 'react-bootstrap';
-import APIUrlConstants from '../../Config/APIUrlConstants';
-import { aboutSignet, apiMethods, gaEvents, httpStatusCode } from '../../Constants/TextConstants';
+import { aboutSignet, gaEvents, httpStatusCode } from '../../Constants/TextConstants';
 import Loading from '../Widgets/Loading';
 import './Login.css';
 import './SignUp.css';
-import { fetchCall } from '../../Services/APIService';
 import { Link, useNavigate } from 'react-router-dom';
 import Alerts from '../Widgets/Alerts';
 import { useForm } from 'react-hook-form';
@@ -14,6 +12,9 @@ import { RecaptchaVerifier, signInWithPhoneNumber } from 'firebase/auth';
 import { userRoleId } from '../../Utilities/AppUtilities';
 import useAnalyticsEventTracker from '../../Hooks/useAnalyticsEventTracker';
 import { hidefcWidget, initFCWidget } from '../Chats/FreshChat';
+import { useDispatch, useSelector } from 'react-redux';
+import { getSSOUser, updateSSOUser } from '../../Redux-Toolkit/sessionSlice/action';
+import { setDefaultStatus } from '../../Redux-Toolkit/sessionSlice';
 
 function GetSSOUserdetails() {
   const {
@@ -42,6 +43,9 @@ function GetSSOUserdetails() {
   const [validated, setValidated] = useState(false);
   const { buttonTracker, linkTracker } = useAnalyticsEventTracker();
 
+  const dispatch = useDispatch();
+  const { ssoUserData, apiStatus, ssoUserStatus, updateSSOData, error } = useSelector((state) => state.session);
+
   const [user, setUser] = useState({
     email: '',
     firstName: '',
@@ -63,93 +67,99 @@ function GetSSOUserdetails() {
 
   const getUserDetails = useCallback(async () => {
     setIsLoading(true);
-    const { 0: status, 1: responseData } = await fetchCall(APIUrlConstants.GET_SSO_USER_DETAILS, apiMethods.POST);
-    const res = responseData.data;
-    if (status === httpStatusCode.SUCCESS) {
-      setUser({
-        email: res.email,
-        firstName: res?.firstName ?? '',
-        lastName: res?.lastName ?? '',
-        orgEmail: res?.orgEmail ?? '',
-        orgName: res?.orgName ?? '',
-        roleId: res?.roleId ?? '',
-        status: res?.status ?? '',
-        primaryPhone: res?.mobileNumber ?? '',
-        userId: res?.userId ?? '',
-        isMobileVerify: res?.isMobileVerify ?? false,
-      });
-      setIsOrgName(!!res.orgName);
-      setIsLastName(!!res.lastName);
-      if (res.roleId) {
-        const userData = {
+    dispatch(getSSOUser());
+  }, [navigate]);
+
+  useEffect(() => {
+    if (apiStatus !== null && Array.isArray(ssoUserData) || ssoUserData !== []) {
+      const res = ssoUserData.data;
+      if (apiStatus === httpStatusCode.SUCCESS) {
+        dispatch(setDefaultStatus());
+        setUser({
           email: res.email,
-          firstName: res.firstName,
-          lastName: res.lastName,
-          mobileNumber: res.mobilePhone,
-          emailId: res.orgEmail,
-          orgName: res.orgName,
-          orgNo: res.orgNo,
-          userId: res.userId,
-        };
-        localStorage.setItem('user', JSON.stringify(userData));
-        localStorage.setItem('token', res.access_token);
-        localStorage.setItem('roleId', res.roleId);
-        localStorage.setItem('email', res.orgEmail);
-        localStorage.setItem('id', res.userId);
-        localStorage.setItem('lastName', res.lastName);
-        localStorage.setItem('firstName', res.firstName);
-        localStorage.setItem('contactSales', res.isContactSales);
-        localStorage.setItem('isSocial', res.isSocial);
-        localStorage.setItem('orgName', res.orgName);
-        localStorage.setItem('orgNo', res.orgNo);
-        localStorage.setItem('mobile', res.mobilePhone);
-        localStorage.setItem('probe', res.probe);
-        if (res.roleId === userRoleId.remoteSmartUser) {
-          await initFCWidget().then(() => hidefcWidget());
+          firstName: res?.firstName ?? '',
+          lastName: res?.lastName ?? '',
+          orgEmail: res?.orgEmail ?? '',
+          orgName: res?.orgName ?? '',
+          roleId: res?.roleId ?? '',
+          status: res?.status ?? '',
+          primaryPhone: res?.mobileNumber ?? '',
+          userId: res?.userId ?? '',
+          isMobileVerify: res?.isMobileVerify ?? false,
+        });
+        setIsOrgName(!!res.orgName);
+        setIsLastName(!!res.lastName);
+        if (res.roleId) {
+          const userData = {
+            email: res.email,
+            firstName: res.firstName,
+            lastName: res.lastName,
+            mobileNumber: res.mobilePhone,
+            emailId: res.orgEmail,
+            orgName: res.orgName,
+            orgNo: res.orgNo,
+            userId: res.userId,
+          };
+          localStorage.setItem('user', JSON.stringify(userData));
+          localStorage.setItem('token', res.access_token);
+          localStorage.setItem('roleId', res.roleId);
+          localStorage.setItem('email', res.orgEmail);
+          localStorage.setItem('id', res.userId);
+          localStorage.setItem('lastName', res.lastName);
+          localStorage.setItem('firstName', res.firstName);
+          localStorage.setItem('contactSales', res.isContactSales);
+          localStorage.setItem('isSocial', res.isSocial);
+          localStorage.setItem('orgName', res.orgName);
+          localStorage.setItem('orgNo', res.orgNo);
+          localStorage.setItem('mobile', res.mobilePhone);
+          localStorage.setItem('probe', res.probe);
+          if (res.roleId === userRoleId.remoteSmartUser) {
+            initFCWidget().then(() => hidefcWidget());
+          }
+          let redirectTo = '/';
+          switch (localStorage.getItem('token') && res.roleId) {
+            case userRoleId.signetAdmin:
+              redirectTo = '/users';
+              break;
+            case userRoleId.nonRemoteSmartUser:
+              redirectTo = '/tickets';
+              break;
+            case userRoleId.remoteSmartUser:
+              redirectTo = '/tickets';
+              break;
+            default:
+              redirectTo = '/';
+              break;
+          }
+          const approveLink = localStorage.getItem('approveLink');
+          if (res.roleId === userRoleId.signetAdmin && approveLink) {
+            redirectTo = approveLink;
+          }
+          navigate(redirectTo);
         }
-        let redirectTo = '/';
-        switch (localStorage.getItem('token') && res.roleId) {
-          case userRoleId.signetAdmin:
-            redirectTo = '/users';
-            break;
-          case userRoleId.nonRemoteSmartUser:
-            redirectTo = '/tickets';
-            break;
-          case userRoleId.remoteSmartUser:
-            redirectTo = '/tickets';
-            break;
-          default:
-            redirectTo = '/';
-            break;
-        }
-        const approveLink = localStorage.getItem('approveLink');
-        if (res.roleId === userRoleId.signetAdmin && approveLink) {
-          redirectTo = approveLink;
-        }
-        navigate(redirectTo);
-      }
-      setIsLoading(false);
-      if (responseData.message === 'Success') {
-        setIsAuthenticated(true);
-      }
-    } else {
-      setShowAlert(true);
-      setAlertVarient('danger');
-      setAlertMessage(responseData?.message ?? 'Something went wrong contact Admin');
-      if (responseData?.message === "You can't sign in here with a personal account. Use your work account.") {
-        localStorage.setItem('personalEmailLogin', responseData?.message);
-        localStorage.removeItem('temp_token');
-        navigate('/');
-      } else {
         setIsLoading(false);
-        localStorage.removeItem('temp_token');
-        setTimeout(() => {
+        if (ssoUserData.message === 'Success') {
+          setIsAuthenticated(true);
+        }
+      } else {
+        setShowAlert(true);
+        setAlertVarient('danger');
+        setAlertMessage(error ?? 'Something went wrong contact Admin');
+        if (error === "You can't sign in here with a personal account. Use your work account.") {
+          localStorage.setItem('personalEmailLogin', error);
+          localStorage.removeItem('temp_token');
           navigate('/');
-          setShowAlert(false);
-        }, 5000);
+        } else {
+          setIsLoading(false);
+          localStorage.removeItem('temp_token');
+          setTimeout(() => {
+            navigate('/');
+            setShowAlert(false);
+          }, 5000);
+        }
       }
     }
-  }, [navigate]);
+  }, [apiStatus]);
 
   const redirecttologin = useCallback(
     () => (localStorage.getItem('temp_token') ? getUserDetails() : navigate('/')),
@@ -164,21 +174,7 @@ function GetSSOUserdetails() {
     buttonTracker(gaEvents.UPDATE_SSO_USER_DETAILS);
     if (otpVer === true && user.orgName && agreeTerms && user.lastName) {
       setIsLoading(true);
-      const { 0: statusCode, 1: responseData } = await fetchCall(APIUrlConstants.CREATE_USER_WITH_ORG, apiMethods.POST, user);
-      if (statusCode === httpStatusCode.SUCCESS) {
-        localStorage.removeItem('temp_token');
-        setIsLoading(false);
-        setShowModal(true);
-      } else {
-        setShowAlert(true);
-        setAlertVarient('danger');
-        setIsLoading(false);
-        setAlertMessage(responseData.message);
-        localStorage.removeItem('temp_token');
-        setTimeout(() => {
-          navigate('/');
-        }, 5000);
-      }
+      dispatch(updateSSOUser(user));
     } else {
       setValidated(true);
       setShowAlert(true);
@@ -190,6 +186,27 @@ function GetSSOUserdetails() {
       }, 5000);
     }
   };
+
+  useEffect(() => {
+    if (ssoUserStatus !== null) {
+      if (ssoUserStatus === httpStatusCode.SUCCESS) {
+        dispatch(setDefaultStatus());
+        localStorage.removeItem('temp_token');
+        setIsLoading(false);
+        setShowModal(true);
+      } else {
+        setShowAlert(true);
+        setAlertVarient('danger');
+        setIsLoading(false);
+        setAlertMessage(error);
+        localStorage.removeItem('temp_token');
+        setTimeout(() => {
+          navigate('/');
+        }, 5000);
+      }
+    }
+  }, [ssoUserStatus]);
+
   function formatPhoneNumber(x) {
     const formated = x.replace(/\D+/g, '').replace(/(\d{3})(\d{3})(\d{4})/, '($1) $2-$3');
 
@@ -208,7 +225,7 @@ function GetSSOUserdetails() {
       'sign-in-button',
       {
         size: 'invisible',
-        callback: () => {},
+        callback: () => { },
       },
       authentication,
     );

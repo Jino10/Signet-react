@@ -6,16 +6,16 @@ import Stomp from 'stompjs';
 import SockJS from 'sockjs-client';
 import { randomColor, userRoleId } from '../../Utilities/AppUtilities';
 import { useThemeUpdate } from '../../Context/MenuContext';
-import { fetchCall } from '../../Services/APIService';
-import APIUrlConstants from '../../Config/APIUrlConstants';
-import { apiMethods, gaEvents } from '../../Constants/TextConstants';
+import { gaEvents } from '../../Constants/TextConstants';
 import { ENV } from '../../Config/Environment';
 import Loading from '../../Pages/Widgets/Loading';
 import Alerts from '../../Pages/Widgets/Alerts';
 import { useOktaAuth } from '@okta/okta-react';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import ReactGA from 'react-ga4';
 import useAnalyticsEventTracker from '../../Hooks/useAnalyticsEventTracker';
+import { fetchNotifyData, removeData, removeNotifyData, userLogout } from '../../Redux-Toolkit/sessionSlice/action';
+import { setLogin, setDefaultStatus } from '../../Redux-Toolkit/sessionSlice';
 
 export default function Header() {
   const { oktaAuth } = useOktaAuth();
@@ -32,8 +32,10 @@ export default function Header() {
   const [alertVarient, setAlertVarient] = useState('');
   const [alertMessage, setAlertMessage] = useState('');
   const [showAlert, setShowAlert] = useState(false);
-  const state = useSelector((stateR) => stateR.UserReducer);
   const { buttonTracker, linkTracker } = useAnalyticsEventTracker();
+  const dispatch = useDispatch();
+
+  const { userData, apiStatus, listNotifyStatus, listNotifyData, error } = useSelector((state) => state.session);
 
   const handleNotification = () => {
     setShow(false);
@@ -42,21 +44,25 @@ export default function Header() {
   };
 
   const fetchNotifications = async () => {
-    const [statusCode, response] = await fetchCall(APIUrlConstants.LIST_NOTIFICATIONS, apiMethods.POST, {
-      userId: localStorage.getItem('id'),
-      orgName: organizationName,
-    });
-    if (statusCode === 200) {
-      const ids = [];
-      setSeenNotification(response.data.seenList);
-      setUnseenNotification(response.data.unSeenList);
-      setLiveNotification([]);
-      response.data.unSeenList.length > 0 && response.data.unSeenList.map((item) => ids.push(item.id));
-      ids.length > 0 &&
-        (await fetchCall(APIUrlConstants.REMOVE_NOTIFICATIONS, apiMethods.POST, {
-          userId: localStorage.getItem('id'),
-          notificationIds: ids,
-        }));
+    dispatch(fetchNotifyData(organizationName));
+    if (listNotifyStatus !== null && Array.isArray(listNotifyData) || listNotifyData !== []) {
+      if (listNotifyStatus === 200) {
+        dispatch(setLogin());
+        const ids = [];
+        setSeenNotification(listNotifyData.data.seenList);
+        setUnseenNotification(listNotifyData.data.unSeenList);
+        setLiveNotification([]);
+        listNotifyData.data.unSeenList.length > 0 && listNotifyData.data.unSeenList.map((item) => ids.push(item.id));
+        ids.length > 0 &&
+          dispatch(removeNotifyData(ids));
+      } else {
+        setShowAlert(true);
+        setAlertMessage(error);
+        setAlertVarient('danger');
+        setTimeout(() => {
+          setShowAlert(false);
+        }, 5000);
+      }
     }
   };
   const handleShow = () => {
@@ -69,10 +75,7 @@ export default function Header() {
   };
 
   const removeSeenLiveNotification = async () => {
-    await fetchCall(APIUrlConstants.REMOVE_NOTIFICATIONS, apiMethods.POST, {
-      userId: localStorage.getItem('id'),
-      notificationIds: [liveNotification[0].id],
-    });
+    dispatch(removeData(liveNotification));
     const notifications = [...liveNotification];
     notifications.shift();
     setLiveNotification(notifications);
@@ -89,12 +92,9 @@ export default function Header() {
 
   const listNotifications = async () => {
     const notify = [];
-    const [statusCode, response] = await fetchCall(APIUrlConstants.LIST_NOTIFICATIONS, apiMethods.POST, {
-      userId: localStorage.getItem('id'),
-      orgName: organizationName,
-    });
-    if (statusCode === 200) {
-      response.data.unSeenList.length > 0 && response.data.unSeenList.map((item) => notify.push(item));
+    dispatch(fetchNotifyData(organizationName));
+    if (listNotifyStatus === 200) {
+      listNotifyData.data.unSeenList.length > 0 && listNotifyData.data.unSeenList.map((item) => notify.push(item));
       notify.length > 0 && setBadgeNumber(notify.length);
       setLiveNotification(notify);
     }
@@ -120,27 +120,33 @@ export default function Header() {
     }, 5000);
   };
 
+  useEffect(() => {
+    if (apiStatus !== null) {
+      if (apiStatus === 200) {
+        dispatch(setDefaultStatus());
+        oktaAuth.tokenManager.clear();
+        localStorage.clear();
+        window.fcWidget.destroy();
+        window.location.href = '/';
+        setIsLoading(false);
+      } else {
+        alertCommand('Log out failed, Try again', 'danger');
+        setIsLoading(false);
+      }
+    }
+  }, [apiStatus]);
+
   const Logout = async () => {
     setIsLoading(true);
     buttonTracker(gaEvents.USER_LOGOUT);
     const urlencoded = new URLSearchParams();
     urlencoded.append('userId', localStorage.getItem('id'));
     urlencoded.append('isSocial', localStorage.getItem('isSocial'));
-    const [statusCode, response] = await fetchCall(APIUrlConstants.LOGOUT_API, apiMethods.POST, urlencoded);
-    if (statusCode === 200) {
-      oktaAuth.tokenManager.clear();
-      localStorage.clear();
-      window.fcWidget.destroy();
-      window.location.href = '/';
-      setIsLoading(false);
-    } else {
-      alertCommand(response.errorMessage || 'Log out failed, Try again', 'danger');
-      setIsLoading(false);
-    }
+    dispatch(userLogout(urlencoded));
   };
 
-  const firstName = state.user?.firstName || localStorage.getItem('firstName') || '';
-  const lastName = state.user?.lastName || localStorage.getItem('lastName') || '';
+  const firstName = userData?.firstName || localStorage.getItem('firstName') || '';
+  const lastName = userData?.lastName || localStorage.getItem('lastName') || '';
   const name = `${firstName}  ${lastName}`;
   const roleId = localStorage.getItem('roleId');
 

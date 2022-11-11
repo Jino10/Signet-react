@@ -3,13 +3,14 @@ import './Login.css';
 import { Container, Row, Col, Form, Button, Modal } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import Loading from '../Widgets/Loading';
-import { aboutSignet, apiMethods, gaEvents, httpStatusCode } from '../../Constants/TextConstants';
-import APIUrlConstants from '../../Config/APIUrlConstants';
-import { fetchCall } from '../../Services/APIService';
+import { aboutSignet, gaEvents, httpStatusCode } from '../../Constants/TextConstants';
 import Alerts from '../Widgets/Alerts';
 import { BRANCHIO } from '../../Config/Environment';
 import { isMobile } from 'react-device-detect';
 import useAnalyticsEventTracker from '../../Hooks/useAnalyticsEventTracker';
+import { useDispatch, useSelector } from 'react-redux';
+import { setDefaultStatus } from '../../Redux-Toolkit/sessionSlice';
+import { resetData } from '../../Redux-Toolkit/sessionSlice/action';
 
 function ResetPassword() {
   const navigate = useNavigate();
@@ -23,6 +24,9 @@ function ResetPassword() {
   const [alertVariant, setAlertVariant] = useState('');
   const [showModal, setShowModal] = useState(false);
   const { buttonTracker, linkTracker } = useAnalyticsEventTracker();
+
+  const dispatch = useDispatch();
+  const { apiStatus, resetPass, error } = useSelector((state) => state.session);
 
   useEffect(() => {
     const queryParams = new URLSearchParams(window.location.search);
@@ -61,11 +65,18 @@ function ResetPassword() {
         password: confirmPasswordValue,
         userId: localStorage.getItem('restPasswordUserId'),
       };
-      const { 0: statusCode, 1: responseData } = await fetchCall(APIUrlConstants.RESET_PASSWORD_API, apiMethods.POST, data);
+      dispatch(resetData(data));
 
       setIsAlertShow(true);
       setIsLoading(false);
-      if (statusCode === httpStatusCode.SUCCESS) {
+    }
+    setValidated(true);
+  };
+
+  useEffect(() => {
+    if (apiStatus !== null) {
+      if (apiStatus === httpStatusCode.SUCCESS) {
+        dispatch(setDefaultStatus());
         if (isMobile) {
           setShowModal(true);
           localStorage.removeItem('restPasswordUserId');
@@ -79,11 +90,10 @@ function ResetPassword() {
         }
       } else {
         setAlertVariant('danger');
-        setAlertData(responseData.message);
+        setAlertData(error);
       }
     }
-    setValidated(true);
-  };
+  }, [apiStatus]);
 
   return (
     <Container fluid className="lognWrapper">

@@ -6,16 +6,18 @@ import { useNavigate } from 'react-router-dom';
 import BootstrapTable from 'react-bootstrap-table-next';
 import paginationFactory from 'react-bootstrap-table2-paginator';
 import ToolkitProvider from 'react-bootstrap-table2-toolkit/dist/react-bootstrap-table2-toolkit';
-import APIUrlConstants from '../../Config/APIUrlConstants';
-import { makeRequest } from '../../Services/APIService';
 import { gaEvents, httpStatusCode } from '../../Constants/TextConstants';
 import Loading from '../Widgets/Loading';
 import './Tickets.css';
 import { userRoleId } from '../../Utilities/AppUtilities';
 import useAnalyticsEventTracker from '../../Hooks/useAnalyticsEventTracker';
+import { useDispatch, useSelector } from 'react-redux';
+import { setTickets } from '../../Redux-Toolkit/ticketSlice';
+import { userAllTickets } from '../../Redux-Toolkit/ticketSlice/action';
 
 function Tickets() {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const [users, setUser] = useState([]);
   const [showAlert, setShowAlert] = useState(false);
   const [error, setError] = useState(false);
@@ -24,24 +26,31 @@ function Tickets() {
   const [isLoading, setIsLoading] = useState(false);
   const { buttonTracker, linkTracker } = useAnalyticsEventTracker();
 
+  const { loading, userTickets, apiStatus } = useSelector((state) => state.ticket);
+
   const fetchAllUserDetails = async () => {
-    setIsLoading(true);
-    const { 0: statusCode, 1: data } = await makeRequest(
-      APIUrlConstants.TICKETS_LIST + `?customerNo=${localStorage.getItem('orgNo')}`,
-    );
-    if (statusCode === httpStatusCode.SUCCESS) {
-      setIsLoading(false);
-      setUser(data.data);
-    } else {
-      setShowAlert(true);
-      setError(true);
-      setAlertMessage(data?.message || 'Failed to fetch tickets');
-      setIsLoading(false);
-      setTimeout(() => {
-        setShowAlert(false);
-      }, 5000);
-    }
+    // setIsLoading(true);
+    dispatch(userAllTickets());
   };
+
+  useEffect(() => {
+    if (apiStatus !== null) {
+      if (apiStatus === httpStatusCode.SUCCESS) {
+        dispatch(setTickets());
+        setIsLoading(false);
+        setUser(userTickets);
+      } else {
+        setShowAlert(true);
+        setError(true);
+        setAlertMessage('Failed to fetch tickets');
+        setIsLoading(false);
+        setTimeout(() => {
+          setShowAlert(false);
+        }, 5000);
+      }
+    }
+  }, [apiStatus])
+
   const handleClick = (ticketId) => {
     buttonTracker(gaEvents.NAVIGATE_EDIT_TICKET);
     navigate(`/ticket/edit/${ticketId}`);
@@ -124,6 +133,7 @@ function Tickets() {
     <div className="wrapperBase">
       <div className="tabelBase" data-test-id="usertable">
         {isLoading && <Loading />}
+        {loading && <Loading />}
         <ToolkitProvider keyField="ticketNo" data={users} columns={columns}>
           {(props) => (
             <>
@@ -137,6 +147,7 @@ function Tickets() {
                     onClick={() => {
                       buttonTracker(gaEvents.NAVIGATE_ADD_TICKET);
                       navigate(`/ticket/add`);
+                      dispatch(setTickets());
                     }}
                   >
                     <img src={process.env.REACT_APP_PUBLIC_URL + 'images/users/plus.svg'} alt="" /> Create Ticket

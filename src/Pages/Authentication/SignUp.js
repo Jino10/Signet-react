@@ -3,14 +3,15 @@ import { Container, Row, Col, Form, Button, Modal } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import './SignUp.css';
 import emailValidator from '../../EmailValidator';
-import APIUrlConstants from '../../Config/APIUrlConstants';
-import { aboutSignet, apiMethods, gaEvents, httpStatusCode } from '../../Constants/TextConstants';
+import { aboutSignet, gaEvents, httpStatusCode } from '../../Constants/TextConstants';
 import Alerts from '../Widgets/Alerts';
-import { fetchCall } from '../../Services/APIService';
 import Loading from '../Widgets/Loading';
 import { authentication } from '../../Config/FirebaseConfig';
 import { RecaptchaVerifier, signInWithPhoneNumber } from 'firebase/auth';
 import useAnalyticsEventTracker from '../../Hooks/useAnalyticsEventTracker';
+import { useDispatch, useSelector } from 'react-redux';
+import { setDefaultStatus } from '../../Redux-Toolkit/sessionSlice';
+import { signUpAccount } from '../../Redux-Toolkit/sessionSlice/action';
 
 function SignUp() {
   const [firstName, setFirstName] = useState('');
@@ -44,6 +45,10 @@ function SignUp() {
   const [wrongOtp, setWrongOtp] = useState(false);
   const phoneNumber = '+1' + phone;
   const { buttonTracker, linkTracker } = useAnalyticsEventTracker();
+
+  const dispatch = useDispatch();
+
+  const { apiStatus, signUpData, error } = useSelector((state) => state.session);
 
   useEffect(() => {
     const timeId = setTimeout(() => {
@@ -91,7 +96,7 @@ function SignUp() {
       'sign-in-button',
       {
         size: 'invisible',
-        callback: () => {},
+        callback: () => { },
       },
       authentication,
     );
@@ -190,23 +195,7 @@ function SignUp() {
       if (otpVer === true) {
         event.stopPropagation();
         setIsLoading(true);
-        const { 0: statusCode, 1: responseData } = await fetchCall(APIUrlConstants.REGISTRATION, apiMethods.POST, {
-          firstName,
-          lastName,
-          orgName: organization,
-          orgEmail,
-          password,
-          primaryPhone: phone,
-          isMobileVerify: true,
-        });
-
-        if (statusCode === httpStatusCode.SUCCESS) {
-          setShowModal(true);
-          setIsLoading(false);
-        } else {
-          setIsLoading(false);
-          setAlertShow(responseData.message);
-        }
+        dispatch(signUpAccount({ firstName, lastName, organization, orgEmail, password, phone }));
       } else {
         setPhoneVer(true);
       }
@@ -215,6 +204,19 @@ function SignUp() {
     }
     setValidated(true);
   };
+
+  useEffect(() => {
+    if (apiStatus !== null) {
+      if (apiStatus === httpStatusCode.SUCCESS) {
+        dispatch(setDefaultStatus());
+        setShowModal(true);
+        setIsLoading(false);
+      } else {
+        setIsLoading(false);
+        setAlertShow(error);
+      }
+    }
+  }, [apiStatus]);
 
   return (
     <Container fluid className="signUpWrapper">

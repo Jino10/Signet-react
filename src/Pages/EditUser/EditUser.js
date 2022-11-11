@@ -2,15 +2,16 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Form, Button, Modal } from 'react-bootstrap';
 import { useForm } from 'react-hook-form';
 import { useNavigate, useParams } from 'react-router-dom';
-import APIUrlConstants from '../../Config/APIUrlConstants';
-import { apiMethods, gaEvents, httpStatusCode } from '../../Constants/TextConstants';
-import { fetchCall, makeRequest } from '../../Services/APIService';
+import { gaEvents, httpStatusCode } from '../../Constants/TextConstants';
 import { randomColor } from '../../Utilities/AppUtilities';
 import Alerts from '../Widgets/Alerts';
 import Loading from '../Widgets/Loading';
 import './EditUser.css';
 import AsyncSelect from 'react-select/async';
 import useAnalyticsEventTracker from '../../Hooks/useAnalyticsEventTracker';
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchOrg, fetchUserRole, fullUserDetails, updateUserData } from '../../Redux-Toolkit/userSlice/action';
+import { setDefault } from '../../Redux-Toolkit/userSlice';
 
 export default function EditUser() {
   const { id } = useParams();
@@ -39,6 +40,10 @@ export default function EditUser() {
   const [isPendingUser, setIsPendingUser] = useState(false);
   const [pendingUserError, setPendingUserError] = useState(false);
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+
+  const { roleStatus, roleDatas, orgData, apiStatus, userFetchData, updateStatus, updateData, errMsg } = useSelector((state) => state.user);
+
   const {
     register,
     handleSubmit,
@@ -50,12 +55,17 @@ export default function EditUser() {
   const timer = useRef(null);
 
   const fetchRoles = async () => {
-    const { 0: status, 1: result } = await makeRequest(APIUrlConstants.GET_USER_ROLES);
-
-    if (status === httpStatusCode.SUCCESS) {
-      setRoles(result.data);
-    }
+    dispatch(fetchUserRole());
   };
+
+  useEffect(() => {
+    if (roleStatus !== null) {
+      if (roleStatus === httpStatusCode.SUCCESS) {
+        dispatch(setDefault());
+        setRoles(roleDatas);
+      }
+    }
+  }, [roleStatus]);
 
   const handleClose = () => setShowWarning(false);
 
@@ -78,9 +88,9 @@ export default function EditUser() {
 
   const loadOptions = async (searchtext) => {
     if (searchtext.length >= 3) {
-      const response = await makeRequest(`${APIUrlConstants.SEARCH_ORG}?company=${searchtext}`);
-      const statusCode = response[0];
-      const responseData = response[1];
+      dispatch(fetchOrg(searchtext));
+      const statusCode = orgData[0];
+      const responseData = orgData[1];
       if (httpStatusCode.SUCCESS === statusCode) {
         return responseData.data;
       }
@@ -91,33 +101,43 @@ export default function EditUser() {
 
   const fetchUserDetails = useCallback(async () => {
     setIsLoading(true);
-    const {
-      0: statusCode,
-      1: { data },
-    } = await makeRequest(`${APIUrlConstants.GET_USER_DETAILS}/${id}`);
-    if (statusCode === httpStatusCode.SUCCESS) {
-      const res = data;
-      const userValues = {
-        firstName: res?.firstName ?? '',
-        lastName: res?.lastName ?? '',
-        orgEmail: res?.orgEmail ?? '',
-        orgName: res?.organization ?? '',
-        roleId: res?.roleId ?? '',
-        status: res?.status ?? '',
-        userId: id,
-      };
-      if (userValues.status === 'Pending') {
-        setIsPendingUser(true);
-      }
-      if (userValues.roleId === '') {
-        setRoleValidated(true);
-      }
-      reset(userValues);
-      setUser(userValues);
-      setSelectedValue({ companyName: res?.organization ?? '' });
-    }
-    setIsLoading(false);
+    dispatch(fullUserDetails(id));
   }, [id, reset]);
+
+  useEffect(() => {
+    if (apiStatus !== null && Array.isArray(userFetchData) || userFetchData !== []) {
+      if (apiStatus === httpStatusCode.SUCCESS) {
+        dispatch(setDefault());
+        const userValues = {
+          firstName: userFetchData?.firstName ?? '',
+          lastName: userFetchData?.lastName ?? '',
+          orgEmail: userFetchData?.orgEmail ?? '',
+          orgName: userFetchData?.organization ?? '',
+          roleId: userFetchData?.roleId ?? '',
+          status: userFetchData?.status ?? '',
+          userId: id,
+        };
+        if (userValues.status === 'Pending') {
+          setIsPendingUser(true);
+        }
+        if (userValues.roleId === '') {
+          setRoleValidated(true);
+        }
+        reset(userValues);
+        setUser(userValues);
+        setSelectedValue({ companyName: userFetchData?.organization ?? '' });
+        setIsLoading(false);
+      } else {
+        setShowAlert(true);
+        setAlertMessage(errMsg);
+        setAlertVarient('danger');
+        setIsLoading(false);
+        setTimeout(() => {
+          setShowAlert(false);
+        }, 5000);
+      }
+    }
+  }, [apiStatus]);
 
   useEffect(() => {
     fetchUserDetails();
@@ -130,11 +150,14 @@ export default function EditUser() {
     } else {
       buttonTracker(gaEvents.UPDATE_USER_DETAILS);
       setIsLoading(true);
-      const { 0: status, 1: data } = await fetchCall(APIUrlConstants.UPDATE_USER_DETAILS, apiMethods.PUT, user);
-      const statusCode = status;
-      const responseData = data;
+      dispatch(updateUserData(user));
+    }
+  };
 
-      if (statusCode === httpStatusCode.SUCCESS) {
+  useEffect(() => {
+    if (updateStatus !== null) {
+      if (updateStatus === httpStatusCode.SUCCESS) {
+        dispatch(setDefault());
         setAlertMessage('User updated successfully');
         setShowAlert(true);
         setAlertVarient('success');
@@ -147,14 +170,14 @@ export default function EditUser() {
       } else {
         setShowAlert(true);
         setAlertVarient('danger');
-        setAlertMessage(responseData.message ?? 'something went wrong ');
+        setAlertMessage(errMsg ?? 'something went wrong ');
         setIsLoading(false);
         setTimeout(() => {
           closeAlert();
         }, 5000);
       }
     }
-  };
+  }, [updateStatus]);
 
   const editUser = () => {
     if (isPendingUser) {

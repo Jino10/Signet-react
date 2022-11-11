@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Button, Form } from 'react-bootstrap';
-import { makeRequest } from '../../Services/APIService';
-import APIUrlConstants from '../../Config/APIUrlConstants';
 import Loading from '../Widgets/Loading';
 import { useNavigate, useParams } from 'react-router-dom';
 import { gaEvents, httpStatusCode } from '../../Constants/TextConstants';
 import useAnalyticsEventTracker from '../../Hooks/useAnalyticsEventTracker';
+import { useDispatch, useSelector } from 'react-redux';
+import { setTickets } from '../../Redux-Toolkit/ticketSlice';
+import { viewTicket } from '../../Redux-Toolkit/ticketSlice/action';
 
 export default function ViewTicket() {
   const navigate = useNavigate();
@@ -13,15 +14,24 @@ export default function ViewTicket() {
   const [data, setData] = useState({});
   const { id } = useParams();
   const { buttonTracker } = useAnalyticsEventTracker();
+  const dispatch = useDispatch();
+
+  const { ticketData, apiStatus } = useSelector((state) => state.ticket);
 
   const fetchTicketDetails = async () => {
     setLoading(true);
-    const { 0: statusCode, 1: resp } = await makeRequest(`${APIUrlConstants.VIEW_TICKET}/${id}`);
-    if (statusCode === httpStatusCode.SUCCESS) {
-      setLoading(false);
-      setData({ ...resp.data[0], description: resp.data[0].description.replace(/\n/g, '<br/>') });
-    }
+    dispatch(viewTicket(id));
   };
+
+  useEffect(() => {
+    if (apiStatus !== null) {
+      if (apiStatus === httpStatusCode.SUCCESS) {
+        dispatch(setTickets());
+        setLoading(false);
+        setData({ ...ticketData.data[0], description: ticketData.data[0].description.replace(/\n/g, '<br/>') });
+      }
+    }
+  }, [apiStatus]);
 
   useEffect(() => {
     fetchTicketDetails();

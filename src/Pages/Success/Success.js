@@ -1,12 +1,14 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import './Success.css';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { makeRequest } from '../../Services/APIService';
-import APIUrlConstants from '../../Config/APIUrlConstants';
 import { httpStatusCode } from '../../Constants/TextConstants';
+import { useDispatch, useSelector } from 'react-redux';
+import { successData } from '../../Redux-Toolkit/sessionSlice/action';
 
 export default function Success() {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const { successValue, error } = useSelector((state) => state.session);
   const [stateData, setStateData] = useState({
     statusCode: null,
     successMessage: 'Please wait...',
@@ -17,27 +19,29 @@ export default function Success() {
   const name = searchParams.get('name');
 
   const fetchPost = useCallback(async () => {
-    const response = await makeRequest(
-      `${APIUrlConstants.APPROVAL_REQUEST_API}/${localStorage.getItem('verifyUserId')}?name=${name}`,
-      {},
-    );
+    dispatch(successData(name));
     localStorage.removeItem('verifyUserId');
-    if (response[0] === httpStatusCode.SUCCESS) {
-      setStateData((prevState) => ({
-        ...prevState,
-        statusCode: 200,
-        showSuccessIcon: true,
-        successMessage: 'Thank you for signing up!',
-      }));
-    } else {
-      setStateData((prevState) => ({
-        ...prevState,
-        statusCode: 400,
-        successMessage: response[1].message,
-        showSuccessIcon: false,
-      }));
-    }
   }, [name]);
+
+  useEffect(() => {
+    if (Array.isArray(successValue) && successValue !== []) {
+      if (successValue[0] === httpStatusCode.SUCCESS) {
+        setStateData((prevState) => ({
+          ...prevState,
+          statusCode: 200,
+          showSuccessIcon: true,
+          successMessage: 'Thank you for signing up!',
+        }));
+      } else {
+        setStateData((prevState) => ({
+          ...prevState,
+          statusCode: 400,
+          successMessage: error,
+          showSuccessIcon: false,
+        }));
+      }
+    }
+  }, [successValue]);
 
   useEffect(() => {
     const pathname = window.location.pathname.split('/email/verifyemail/');

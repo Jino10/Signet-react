@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Button, Form } from 'react-bootstrap';
-import { fetchCall, makeRequest } from '../../Services/APIService';
-import APIUrlConstants from '../../Config/APIUrlConstants';
 import Loading from '../Widgets/Loading';
 import Alerts from '../Widgets/Alerts';
 import { useNavigate, useParams } from 'react-router-dom';
-import { apiMethods, gaEvents, httpStatusCode } from '../../Constants/TextConstants';
+import { gaEvents, httpStatusCode } from '../../Constants/TextConstants';
 import useAnalyticsEventTracker from '../../Hooks/useAnalyticsEventTracker';
 import moment from 'moment-timezone';
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchPriorityData, fetchProblemData, fetchSiteData, fetchSystemData, fetchTicketData, ticketsUpdate } from '../../Redux-Toolkit/ticketSlice/action';
+import { setTickets } from '../../Redux-Toolkit/ticketSlice';
 
 export default function AddTicket() {
   const navigate = useNavigate();
@@ -45,6 +46,9 @@ export default function AddTicket() {
   const { buttonTracker } = useAnalyticsEventTracker();
   const [noApiError, setNoApiError] = useState(true);
   const [apiErrorMsg, setApiErrorMsg] = useState('');
+  const dispatch = useDispatch();
+
+  const { siteList, priorityList, problemList, systemList, dataList, apiStatus,error } = useSelector((state) => state.ticket);
 
   const getDate = () => {
     const format = 'YYYY-MM-DD HH:mm';
@@ -52,18 +56,27 @@ export default function AddTicket() {
     return date;
   };
 
+  useEffect(() => {
+    if (id) {
+      dispatch(fetchSiteData());
+      dispatch(fetchPriorityData());
+      dispatch(fetchProblemData());
+      dispatch(fetchTicketData(id));
+    } else {
+      dispatch(fetchSiteData());
+      dispatch(fetchPriorityData());
+      dispatch(fetchProblemData());
+      dispatch(fetchSystemData());
+    }
+  }, []);
+
   const fetchPromise = async () => {
     const optionArray = [];
-    const fetchSitelist = await makeRequest(`${APIUrlConstants.LIST_SITES}?customerNo=${localStorage.getItem('orgNo')}`);
-    const fetchPriority = await makeRequest(APIUrlConstants.LIST_PRIORITY);
-    const fetchProblemcode = await makeRequest(APIUrlConstants.LIST_PROBLEM_CODE);
-    const fetchSystemType = await makeRequest(APIUrlConstants.LIST_SYSTEM_TYPE);
-    let resolvedArr;
+    let resolvedArr = [];
     if (id) {
-      const fetchTicketView = await makeRequest(`${APIUrlConstants.VIEW_TICKET}/${id}`);
-      resolvedArr = await Promise.all([fetchSitelist, fetchPriority, fetchProblemcode, fetchTicketView]);
+      resolvedArr = await Promise.all([siteList, priorityList, problemList, dataList]);
     } else {
-      resolvedArr = await Promise.all([fetchSitelist, fetchPriority, fetchProblemcode, fetchSystemType]);
+      resolvedArr = await Promise.all([siteList, priorityList, problemList, systemList]);
     }
     resolvedArr.forEach((i) => {
       if (i[0] !== httpStatusCode.SUCCESS) {
@@ -79,6 +92,7 @@ export default function AddTicket() {
       }
     });
     if (resolvedArr && resolvedArr.every((i) => i[0] === httpStatusCode.SUCCESS)) {
+      setNoApiError(true);
       const { 0: Sitelist, 1: PriorityList, 2: ProblemCodeList, 3: fetchTicket } = resolvedArr;
       Sitelist[1]?.data.length > 0 &&
         Sitelist[1]?.data.forEach((i) => {
@@ -125,6 +139,14 @@ export default function AddTicket() {
   };
 
   useEffect(() => {
+    if (Array.isArray(siteList) && Array.isArray(priorityList) && Array.isArray(problemList) && (Array.isArray(systemList) || Array.isArray(dataList))) {
+      if (siteList && priorityList && problemList && (systemList || dataList)) {
+        fetchPromise();
+      }
+    }
+  }, [siteList, priorityList, problemList, systemList, dataList]);
+
+  useEffect(() => {
     setPostObject((prev) => {
       const Current = { ...prev };
       Current.customerId = localStorage.getItem('orgNo');
@@ -157,23 +179,8 @@ export default function AddTicket() {
       buttonTracker(gaEvents.CREATE_NEW_TICKET);
     }
     if (PostObject.description && PostObject.site && PostObject.callerEmail === localStorage.getItem('email') && noApiError) {
-      const { 0: status, 1: data } = await fetchCall(APIUrlConstants.CREATE_TICKET, apiMethods.POST, ticketObject);
-      const statusCode = status;
-      const responseData = data;
+      dispatch(ticketsUpdate(ticketObject));
 
-      if (statusCode === httpStatusCode.SUCCESS) {
-        setSaveLoading(false);
-        navigate('/tickets');
-      } else {
-        setShowAlert(true);
-        setAlertVarient('danger');
-        setAlertMessage(responseData.message ?? 'something went wrong ');
-        setSaveLoading(false);
-        setTimeout(() => {
-          setShowAlert(false);
-          navigate('/tickets');
-        }, 5000);
-      }
     } else if (PostObject.callerEmail !== localStorage.getItem('email')) {
       setShowAlert(true);
       setAlertVarient('danger');
@@ -197,6 +204,31 @@ export default function AddTicket() {
       setSaveLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (apiStatus !== null) {
+      if (apiStatus === httpStatusCode.SUCCESS) {
+        dispatch(setTickets());
+        setSaveLoading(false);
+        setShowAlert(true);
+        setAlertVarient('success');
+        setAlertMessage('ticket created successfully');
+        setTimeout(() => {
+          setShowAlert(false);
+          navigate('/tickets');
+        }, 5000);
+      } else {
+        setShowAlert(true);
+        setAlertVarient('danger');
+        setAlertMessage(error);
+        setSaveLoading(false);
+        setTimeout(() => {
+          setShowAlert(false);
+          navigate('/tickets');
+        }, 5000);
+      }
+    }
+  }, [apiStatus]);
 
   const handleChange = (e) => {
     setSelectedValue(e.target.value);

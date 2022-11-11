@@ -1,14 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { Alert, Button, Col, Container, Form, Row } from 'react-bootstrap';
-import { fetchCall } from '../../Services/APIService';
-import APIUrlConstants from '../../Config/APIUrlConstants';
-import { aboutSignet, apiMethods, gaEvents, httpStatusCode } from '../../Constants/TextConstants';
+import { aboutSignet, gaEvents, httpStatusCode } from '../../Constants/TextConstants';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { authentication } from '../../Config/FirebaseConfig';
 import { RecaptchaVerifier, signInWithPhoneNumber } from 'firebase/auth';
 import Alerts from '../Widgets/Alerts';
 import Loading from '../Widgets/Loading';
 import useAnalyticsEventTracker from '../../Hooks/useAnalyticsEventTracker';
+import { useDispatch, useSelector } from 'react-redux';
+import { updatePhone } from '../../Redux-Toolkit/sessionSlice/action';
 
 export default function OTPVerification() {
   const [fnameData, setFnameData] = useState('');
@@ -29,6 +29,9 @@ export default function OTPVerification() {
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [validated, setValidated] = useState(false);
   const { buttonTracker, linkTracker } = useAnalyticsEventTracker('Button');
+
+  const dispatch = useDispatch();
+  const { updateNumberData } = useSelector((state) => state.session);
 
   useEffect(() => {
     const firstNameData = dataFromLogin.state.datas.firstName;
@@ -76,7 +79,7 @@ export default function OTPVerification() {
       'sign-in-button',
       {
         size: 'invisible',
-        callback: () => {},
+        callback: () => { },
       },
       authentication,
     );
@@ -126,8 +129,15 @@ export default function OTPVerification() {
         primaryPhone: phone,
         userId: userIdData,
       };
-      const response = await fetchCall(APIUrlConstants.UPDATE_PROFILE, apiMethods.POST, sendingdata);
-      const statusCode = response[0];
+      dispatch(updatePhone(sendingdata));
+    } else {
+      setValidated(true);
+    }
+  };
+
+  useEffect(() => {
+    if (Array.isArray(updateNumberData) && updateNumberData !== []) {
+      const statusCode = updateNumberData[0];
       if (httpStatusCode.SUCCESS === statusCode) {
         buttonTracker(gaEvents.UPDATE_MOBILE_NUMBER);
         setAlertSucShow(true);
@@ -141,10 +151,9 @@ export default function OTPVerification() {
           setSucShow(false);
         }, 5000);
       }
-    } else {
-      setValidated(true);
     }
-  };
+  }, [updateNumberData]);
+
   const verifyotp = (e) => {
     const otp = e.target.value;
     setOtpNumber(otp);

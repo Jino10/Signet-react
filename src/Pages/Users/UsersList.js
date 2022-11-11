@@ -6,13 +6,14 @@ import { useNavigate } from 'react-router-dom';
 import BootstrapTable from 'react-bootstrap-table-next';
 import paginationFactory from 'react-bootstrap-table2-paginator';
 import ToolkitProvider, { Search } from 'react-bootstrap-table2-toolkit/dist/react-bootstrap-table2-toolkit';
-import APIUrlConstants from '../../Config/APIUrlConstants';
-import { fetchCall, makeRequest } from '../../Services/APIService';
 import UserModal from './UserModal';
-import { apiMethods, gaEvents, httpStatusCode } from '../../Constants/TextConstants';
+import { gaEvents, httpStatusCode } from '../../Constants/TextConstants';
 import Loading from '../Widgets/Loading';
 import useAnalyticsEventTracker from '../../Hooks/useAnalyticsEventTracker';
 import ReactGA from 'react-ga4';
+import { useDispatch, useSelector } from 'react-redux';
+import { allUsersList, deleteUserId } from '../../Redux-Toolkit/userSlice/action';
+import { setDefault } from '../../Redux-Toolkit/userSlice';
 
 function UsersList({ userId }) {
   const { SearchBar } = Search;
@@ -25,6 +26,9 @@ function UsersList({ userId }) {
   const [alertMessage, setAlertMessage] = useState('');
   const [show, setShow] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const dispatch = useDispatch();
+
+  const { usersList, apiStatus, response, apiFullStatus, errMsg } = useSelector((state) => state.user);
 
   const handleClose = () => setShow(false);
   const handleShow = (e) => {
@@ -37,12 +41,27 @@ function UsersList({ userId }) {
 
   const fetchAllUserDetails = async () => {
     setIsLoading(true);
-    const { 0: statusCode, 1: data } = await makeRequest(APIUrlConstants.FETCH_USER_DETAILS);
-    if (statusCode === httpStatusCode.SUCCESS) {
-      setIsLoading(false);
-    }
-    setUser(data.data);
+    dispatch(allUsersList());
   };
+
+  useEffect(() => {
+    if (apiStatus !== null) {
+      if (apiStatus === httpStatusCode.SUCCESS) {
+        dispatch(setDefault());
+        setUser(usersList);
+        setIsLoading(false);
+      } else {
+        setIsLoading(false);
+        setShowAlert(true);
+        setAlertMessage(errMsg);
+        setError(true);
+        setTimeout(() => {
+          setShowAlert(false);
+        }, 5000);
+      }
+    }
+  }, [apiStatus]);
+
   const handleClick = (e) => {
     const { id } = e.target;
     buttonTracker(gaEvents.NAVIGATE_EDIT_USER);
@@ -58,34 +77,41 @@ function UsersList({ userId }) {
       status: deleteUserStatus,
     };
 
-    const { 0: statusCode, 1: responseData } = await fetchCall(`${APIUrlConstants.DELETE_USER}/${id}`, apiMethods.DELETE, dUser);
-    if (statusCode === httpStatusCode.SUCCESS) {
-      setShowAlert(true);
-      setAlertMessage('Deleted successfully');
-      setError(false);
-      handleClose();
-      sessionStorage.removeItem('deleteUserActive');
-      sessionStorage.removeItem('deleteUserId');
-      setTimeout(() => {
-        fetchAllUserDetails();
-        setTimeout(() => {
-          closeAlert();
-        }, 3000);
-      }, 2000);
-    } else {
-      setShowAlert(true);
-      setError(true);
-      setAlertMessage(responseData.message);
-      handleClose();
-      setIsLoading(false);
-      sessionStorage.removeItem('deleteUserActive');
-      sessionStorage.removeItem('deleteUserId');
-      setTimeout(() => {
-        closeAlert();
-      }, 5000);
-    }
+    dispatch(deleteUserId({ id, dUser }));
     handleClose();
   };
+
+  useEffect(() => {
+    if (apiFullStatus !== null) {
+      if (apiFullStatus === httpStatusCode.SUCCESS) {
+        dispatch(setDefault());
+        setShowAlert(true);
+        setAlertMessage('Deleted successfully');
+        setError(false);
+        handleClose();
+        sessionStorage.removeItem('deleteUserActive');
+        sessionStorage.removeItem('deleteUserId');
+        setTimeout(() => {
+          fetchAllUserDetails();
+          setTimeout(() => {
+            closeAlert();
+          }, 3000);
+        }, 2000);
+      } else {
+        setShowAlert(true);
+        setError(true);
+        setAlertMessage(errMsg);
+        handleClose();
+        setIsLoading(false);
+        sessionStorage.removeItem('deleteUserActive');
+        sessionStorage.removeItem('deleteUserId');
+        setTimeout(() => {
+          closeAlert();
+        }, 5000);
+      }
+    }
+  }, [apiFullStatus]);
+
   const actionBtn = (_row, cell, _rowIndex) => (
     <div className="actionBox d-flex align-items-center" data-testid="usertable">
       <Button variant="link" id={cell.userId} onClick={handleClick}>

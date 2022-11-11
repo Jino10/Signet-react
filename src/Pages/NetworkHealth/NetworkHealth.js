@@ -1,14 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import './NetworkHealth.css';
 import { Button } from 'react-bootstrap';
-import APIUrlConstants from '../../Config/APIUrlConstants';
-import { fetchCall } from '../../Services/APIService';
-import { apiMethods, gaEvents, httpStatusCode } from '../../Constants/TextConstants';
+import { gaEvents, httpStatusCode } from '../../Constants/TextConstants';
 import useAnalyticsEventTracker from '../../Hooks/useAnalyticsEventTracker';
+import { useDispatch, useSelector } from 'react-redux';
+import { setDefaultStatus } from '../../Redux-Toolkit/sessionSlice';
+import { chartData } from '../../Redux-Toolkit/sessionSlice/action';
 
 export default function NetworkHealth() {
   const [snackBar, setSnackBar] = useState(false);
   const { buttonTracker } = useAnalyticsEventTracker();
+  const dispatch = useDispatch();
+
+  const { apiStatus } = useSelector((state) => state.session);
 
   useEffect(() => {
     if (localStorage.getItem('contactSales') === 'true') {
@@ -17,12 +21,18 @@ export default function NetworkHealth() {
   }, []);
 
   const handleClick = async () => {
-    const [statusCode] = await fetchCall(`${APIUrlConstants.CONTACT_SALES}/${localStorage.getItem('id')}`, apiMethods.POST, {});
-    if (statusCode === httpStatusCode.SUCCESS) {
-      setSnackBar(true);
-      localStorage.setItem('contactSales', 'true');
-    }
+    dispatch(chartData());
   };
+
+  useEffect(() => {
+    if (apiStatus !== null) {
+      if (apiStatus === httpStatusCode.SUCCESS) {
+        dispatch(setDefaultStatus());
+        setSnackBar(true);
+        localStorage.setItem('contactSales', 'true');
+      }
+    }
+  }, [apiStatus]);
 
   return (
     <div className="wrapperBase">

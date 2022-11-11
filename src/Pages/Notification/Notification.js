@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import './Notification.css';
-import { fetchCall } from '../../Services/APIService';
-import APIUrlConstants from '../../Config/APIUrlConstants';
-import { apiMethods, httpStatusCode } from '../../Constants/TextConstants';
+import { httpStatusCode } from '../../Constants/TextConstants';
 import { Button } from 'react-bootstrap';
 import Loading from '../Widgets/Loading';
+import { useDispatch, useSelector } from 'react-redux';
+import { setDefaultStatus } from '../../Redux-Toolkit/sessionSlice';
+import { notificationData } from '../../Redux-Toolkit/sessionSlice/action';
+import Alerts from '../Widgets/Alerts';
 
 export default function Notification() {
   const organizationName = localStorage.getItem('orgName');
@@ -14,23 +16,35 @@ export default function Notification() {
   const [pageNumber, setPageNumber] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
 
+  const [alertShow, setAlertShow] = useState(false);
+  const [alertMessage, setAlertMessage] = useState('');
+  const [variant, setVariant] = useState('');
+
+  const handleClose = () => setAlertShow(false);
+
+  const dispatch = useDispatch();
+  const { notifyStatus, notificationValues, error } = useSelector((state) => state.session);
+
   const fetchNotifications = async (pageNo) => {
     setIsLoading(true);
-    const [statusCode, response] = await fetchCall(APIUrlConstants.VIEW_ALL_NOTIFICATIONS, apiMethods.POST, {
-      userId: localStorage.getItem('id'),
-      orgName: organizationName,
-      page: pageNo,
-      pageSize: 10,
-      status: 'All',
-    });
-    if (statusCode === httpStatusCode.SUCCESS) {
-      setIsLoading(false);
-      setNotifications(response.data.content);
-      setLastPage(response.data.last);
-      setFirstPage(response.data.first);
-      setPageNumber(pageNo);
-    } else {
-      setIsLoading(false);
+    dispatch(notificationData({ pageNo, organizationName }));
+    if (notifyStatus !== null && Array.isArray(notificationValues) || notificationValues !== []) {
+      if (notifyStatus === httpStatusCode.SUCCESS) {
+        dispatch(setDefaultStatus());
+        setIsLoading(false);
+        setNotifications(notificationValues.data.content);
+        setLastPage(notificationValues.data.last);
+        setFirstPage(notificationValues.data.first);
+        setPageNumber(pageNo);
+      } else {
+        setIsLoading(false);
+        setAlertShow(true);
+        setVariant('danger');
+        setAlertMessage(error);
+        setTimeout(() => {
+          setAlertShow(false);
+        }, 5000);
+      }
     }
   };
 
@@ -50,6 +64,11 @@ export default function Notification() {
 
   return (
     <div className="wrapperBase">
+      <Alerts
+        variant={variant}
+        onClose={handleClose}
+        alertshow={alertMessage}
+      />
       {isLoading ? (
         <Loading />
       ) : (

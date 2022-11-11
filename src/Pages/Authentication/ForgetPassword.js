@@ -1,13 +1,14 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import './Login.css';
 import './SignUp.css';
 import { Alert, Button, Col, Container, Form, Row } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
-import { fetchCall } from '../../Services/APIService';
-import APIUrlConstants from '../../Config/APIUrlConstants';
-import { aboutSignet, apiMethods, gaEvents, httpStatusCode } from '../../Constants/TextConstants';
+import { aboutSignet, gaEvents, httpStatusCode } from '../../Constants/TextConstants';
 import useAnalyticsEventTracker from '../../Hooks/useAnalyticsEventTracker';
 import Loading from '../Widgets/Loading';
+import { useDispatch, useSelector } from 'react-redux';
+import { forgetData } from '../../Redux-Toolkit/sessionSlice/action';
+import { setDefaultStatus } from '../../Redux-Toolkit/sessionSlice';
 
 function ForgetPassword() {
   const [stateData, setStateData] = useState({
@@ -24,6 +25,10 @@ function ForgetPassword() {
   const navigate = useNavigate();
   const { buttonTracker, linkTracker } = useAnalyticsEventTracker();
   const [isLoading, setIsLoading] = useState(false);
+
+  const dispatch = useDispatch();
+
+  const { apiStatus, forgetPass } = useSelector((state) => state.session);
 
   const validateEmail = () => {
     const validation = stateData.email.length === 0 || !stateData.emailRegex.test(stateData.email);
@@ -48,12 +53,14 @@ function ForgetPassword() {
     buttonTracker(gaEvents.SEND_RESET_PASSWORD_LINK);
     if (form.checkValidity() === true) {
       event.stopPropagation();
-      const { 0: statusCode, 1: responseData } = await fetchCall(
-        APIUrlConstants.FORGET_PASSWORD_API + stateData.email,
-        apiMethods.POST,
-      );
+      dispatch(forgetData(stateData));
+    }
+  };
 
-      if (statusCode === httpStatusCode.SUCCESS) {
+  useEffect(() => {
+    if (apiStatus !== null) {
+      if (apiStatus === httpStatusCode.SUCCESS) {
+        dispatch(setDefaultStatus());
         setStateData((prevState) => ({
           ...prevState,
           showAlert: true,
@@ -77,7 +84,7 @@ function ForgetPassword() {
           ...prevState,
           showAlert: true,
           alertVarient: 'danger',
-          alertMessage: responseData.message,
+          alertMessage: forgetPass.message,
           validated: false,
           validEmail: false,
         }));
@@ -89,7 +96,7 @@ function ForgetPassword() {
         }, 5000);
       }
     }
-  };
+  }, [apiStatus]);
 
   return (
     <Container fluid className="lognWrapper">

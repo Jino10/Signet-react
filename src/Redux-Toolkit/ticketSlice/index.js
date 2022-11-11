@@ -53,7 +53,7 @@ export const ticketSlice = createSlice({
     });
     builder.addCase(userAllTickets.rejected, (state, action) => {
       state.loading = false;
-      console.log(action.payload);
+      state.apiStatus = false;
       state.error = action.payload.message;
     });
     builder.addCase(fetchSiteData.pending, (state) => {
@@ -127,6 +127,7 @@ export const ticketSlice = createSlice({
     });
     builder.addCase(ticketsUpdate.rejected, (state, action) => {
       state.loading = false;
+      state.apiStatus = false;
       state.isFetching = false;
       state.isError = false;
       state.error = action.payload.message;
@@ -143,6 +144,7 @@ export const ticketSlice = createSlice({
     });
     builder.addCase(viewTicket.rejected, (state) => {
       state.loading = false;
+      state.apiStatus = false;
     });
     builder.addCase(dashboardData.pending, (state) => {
       state.loading = true;
@@ -156,6 +158,7 @@ export const ticketSlice = createSlice({
     });
     builder.addCase(dashboardData.rejected, (state) => {
       state.loading = false;
+      state.apiStatus = false;
     });
     builder.addCase(profileUpdate.pending, (state) => {
       state.loading = true;
@@ -169,6 +172,7 @@ export const ticketSlice = createSlice({
     });
     builder.addCase(profileUpdate.rejected, (state, action) => {
       state.loading = false;
+      state.profileStatus = false;
       state.error = action.payload.message;
     });
   },

@@ -107,9 +107,8 @@ export default function EditUser() {
   }, [id, reset]);
 
   useEffect(() => {
-    if ((apiStatus !== null && Array.isArray(userFetchData)) || userFetchData !== []) {
+    if (apiStatus !== null) {
       if (apiStatus === httpStatusCode.SUCCESS) {
-        dispatch(setDefault());
         const userValues = {
           firstName: userFetchData?.firstName ?? '',
           lastName: userFetchData?.lastName ?? '',
@@ -119,16 +118,17 @@ export default function EditUser() {
           status: userFetchData?.status ?? '',
           userId: id,
         };
+        reset(userValues);
+        setUser(userValues);
+        setSelectedValue({ companyName: userFetchData?.organization ?? '' });
+        setIsLoading(false);
+        dispatch(setDefault());
         if (userValues.status === 'Pending') {
           setIsPendingUser(true);
         }
         if (userValues.roleId === '') {
           setRoleValidated(true);
         }
-        reset(userValues);
-        setUser(userValues);
-        setSelectedValue({ companyName: userFetchData?.organization ?? '' });
-        setIsLoading(false);
       } else {
         setShowAlert(true);
         setAlertMessage(errMsg);

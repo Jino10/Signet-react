@@ -23,7 +23,7 @@ function TwoFactorSignIn() {
   const [isLoading, setIsLoading] = useState(false);
   const { buttonTracker } = useAnalyticsEventTracker();
 
-  const { loading, userData, isFetching, isError, apiFullStatus, apiStatus } = useSelector((state) => state.session);
+  const { loading, userData, isFetching, isError, apiFullStatus, apiStatus, error } = useSelector((state) => state.session);
 
   useEffect(() => {
     if (!isFetching) {
@@ -106,7 +106,14 @@ function TwoFactorSignIn() {
           navigate('/tickets');
         }
       } else {
+        console.log('er')
         setIsLoading(false);
+        setAlertShow(error);
+        setAlertVarient('danger');
+        setIsLoading(false);
+        setTimeout(() => {
+          setAlertShow(false);
+        }, 5000);
       }
     }
   }, [apiFullStatus]);

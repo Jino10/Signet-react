@@ -85,8 +85,10 @@ export const sessionSlice = createSlice({
       state.isError = false;
       state.userData = action.payload.responseData;
     });
-    builder.addCase(twoFactorLogin.rejected, (state) => {
+    builder.addCase(twoFactorLogin.rejected, (state, action) => {
       state.loading = false;
+      state.apiFullStatus = false
+      state.error = action.payload.message
     });
     builder.addCase(resendOTP.pending, (state) => {
       state.loading = true;
@@ -100,6 +102,7 @@ export const sessionSlice = createSlice({
     });
     builder.addCase(resendOTP.rejected, (state) => {
       state.loading = false;
+      state.apiStatus = false;
     });
     builder.addCase(userLogout.pending, (state) => {
       state.loading = true;
@@ -112,6 +115,7 @@ export const sessionSlice = createSlice({
     });
     builder.addCase(userLogout.rejected, (state) => {
       state.loading = false;
+      state.apiStatus = false;
     });
     builder.addCase(chartData.pending, (state) => {
       state.loading = true;
@@ -124,6 +128,7 @@ export const sessionSlice = createSlice({
     });
     builder.addCase(chartData.rejected, (state) => {
       state.loading = false;
+      state.apiStatus = false;
     });
     builder.addCase(signUpAccount.pending, (state) => {
       state.loading = true;
@@ -137,6 +142,7 @@ export const sessionSlice = createSlice({
     });
     builder.addCase(signUpAccount.rejected, (state, action) => {
       state.loading = false;
+      state.apiStatus = false;
       state.error = action.payload.message;
     });
     builder.addCase(forgetData.pending, (state) => {
@@ -151,6 +157,7 @@ export const sessionSlice = createSlice({
     });
     builder.addCase(forgetData.rejected, (state) => {
       state.loading = false;
+      state.apiStatus = false;
     });
     builder.addCase(getSSOUser.pending, (state) => {
       state.loading = true;
@@ -164,6 +171,7 @@ export const sessionSlice = createSlice({
     });
     builder.addCase(getSSOUser.rejected, (state, action) => {
       state.loading = false;
+      state.apiStatus = false;
       state.error = action.payload.message;
     });
     builder.addCase(updateSSOUser.pending, (state) => {
@@ -178,6 +186,7 @@ export const sessionSlice = createSlice({
     });
     builder.addCase(updateSSOUser.rejected, (state, action) => {
       state.loading = false;
+      state.ssoUserStatus = false;
       state.error = action.payload.message;
     });
     builder.addCase(updatePhone.pending, (state) => {
@@ -204,6 +213,7 @@ export const sessionSlice = createSlice({
     });
     builder.addCase(resetData.rejected, (state, action) => {
       state.loading = false;
+      state.apiStatus = false;
       state.error = action.payload.message;
     });
     builder.addCase(successData.pending, (state) => {
@@ -231,6 +241,7 @@ export const sessionSlice = createSlice({
     });
     builder.addCase(notificationData.rejected, (state, action) => {
       state.loading = false;
+      state.notifyStatus = false;
       state.error = action.payload.message;
     });
     builder.addCase(fetchNotifyData.pending, (state) => {
@@ -245,6 +256,7 @@ export const sessionSlice = createSlice({
     });
     builder.addCase(fetchNotifyData.rejected, (state, action) => {
       state.loading = false;
+      state.listNotifyStatus = false;
       state.error = action.payload.message;
     });
   },

@@ -11,12 +11,15 @@ export const userLogin = createAsyncThunk('session/userLogin', async (urlencoded
   return rejectWithValue(data);
 });
 
-export const twoFactorLogin = createAsyncThunk('session/twoFactorLogin', async ({ id, otp }) => {
+export const twoFactorLogin = createAsyncThunk('session/twoFactorLogin', async ({ id, otp }, { rejectWithValue }) => {
   const { 0: statuscode, 1: data } = await fetchCall(
     APIUrlConstants.LOGIN_OTP_API + '?id=' + id + '&otp=' + otp,
     apiMethods.POST,
   );
-  return { status: statuscode, responseData: data.data };
+  if (statuscode === httpStatusCode.SUCCESS) {
+    return { status: statuscode, responseData: data.data };
+  }
+  return rejectWithValue(data);
 });
 
 export const resendOTP = createAsyncThunk('session/resendOTP', async (id) => {

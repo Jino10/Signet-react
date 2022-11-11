@@ -62,6 +62,7 @@ export const userSlice = createSlice({
     });
     builder.addCase(allUsersList.rejected, (state, action) => {
       state.loading = false;
+      state.apiStatus = false;
       state.errMsg = action.payload.message;
     });
     builder.addCase(deleteUserId.pending, (state) => {
@@ -76,6 +77,7 @@ export const userSlice = createSlice({
     });
     builder.addCase(deleteUserId.rejected, (state, action) => {
       state.loading = false;
+      state.apiFullStatus = false;
       state.errMsg = action.payload.message;
     });
     builder.addCase(userDetails.pending, (state) => {
@@ -90,6 +92,7 @@ export const userSlice = createSlice({
     });
     builder.addCase(userDetails.rejected, (state, action) => {
       state.loading = false;
+      state.userDetailStatus = false;
       state.errMsg = action.payload.message;
     });
     builder.addCase(fetchUserRole.pending, (state) => {
@@ -104,6 +107,7 @@ export const userSlice = createSlice({
     });
     builder.addCase(fetchUserRole.rejected, (state) => {
       state.loading = false;
+      state.roleStatus = false;
     });
     builder.addCase(fetchOrg.pending, (state) => {
       state.loading = true;
@@ -129,6 +133,7 @@ export const userSlice = createSlice({
     });
     builder.addCase(createUser.rejected, (state, action) => {
       state.loading = false;
+      state.newApiStatus = false;
       state.errMsg = action.payload.message;
     });
     builder.addCase(fullUserDetails.pending, (state) => {
@@ -143,6 +148,7 @@ export const userSlice = createSlice({
     });
     builder.addCase(fullUserDetails.rejected, (state, action) => {
       state.loading = false;
+      state.apiStatus = false;
       state.errMsg = action.payload.message;
     });
     builder.addCase(updateUserData.pending, (state) => {
@@ -157,6 +163,7 @@ export const userSlice = createSlice({
     });
     builder.addCase(updateUserData.rejected, (state, action) => {
       state.loading = false;
+      state.updateStatus = false;
       state.errMsg = action.payload.message;
     });
     builder.addCase(fetchOrgNames.pending, (state) => {

@@ -87,8 +87,8 @@ export const sessionSlice = createSlice({
     });
     builder.addCase(twoFactorLogin.rejected, (state, action) => {
       state.loading = false;
-      state.apiFullStatus = false
-      state.error = action.payload.message
+      state.apiFullStatus = false;
+      state.error = action.payload.message;
     });
     builder.addCase(resendOTP.pending, (state) => {
       state.loading = true;

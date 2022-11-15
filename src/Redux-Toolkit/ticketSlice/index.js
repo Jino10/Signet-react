@@ -65,8 +65,9 @@ export const ticketSlice = createSlice({
       state.loading = false;
       state.isFetching = false;
     });
-    builder.addCase(fetchSiteData.rejected, (state) => {
+    builder.addCase(fetchSiteData.rejected, (state, action) => {
       state.loading = false;
+      state.error = action.payload.message;
     });
     builder.addCase(fetchPriorityData.pending, (state) => {
       state.loading = true;
@@ -77,8 +78,9 @@ export const ticketSlice = createSlice({
       state.loading = false;
       state.isFetching = false;
     });
-    builder.addCase(fetchPriorityData.rejected, (state) => {
+    builder.addCase(fetchPriorityData.rejected, (state, action) => {
       state.loading = false;
+      state.error = action.payload.message;
     });
     builder.addCase(fetchProblemData.pending, (state) => {
       state.loading = true;
@@ -89,8 +91,9 @@ export const ticketSlice = createSlice({
       state.loading = false;
       state.isFetching = false;
     });
-    builder.addCase(fetchProblemData.rejected, (state) => {
+    builder.addCase(fetchProblemData.rejected, (state, action) => {
       state.loading = false;
+      state.error = action.payload.message;
     });
     builder.addCase(fetchSystemData.pending, (state) => {
       state.loading = true;
@@ -101,8 +104,9 @@ export const ticketSlice = createSlice({
       state.loading = false;
       state.isFetching = false;
     });
-    builder.addCase(fetchSystemData.rejected, (state) => {
+    builder.addCase(fetchSystemData.rejected, (state, action) => {
       state.loading = false;
+      state.error = action.payload.message;
     });
     builder.addCase(fetchTicketData.pending, (state) => {
       state.loading = true;
@@ -113,8 +117,9 @@ export const ticketSlice = createSlice({
       state.loading = false;
       state.isFetching = false;
     });
-    builder.addCase(fetchTicketData.rejected, (state) => {
+    builder.addCase(fetchTicketData.rejected, (state, action) => {
       state.loading = false;
+      state.error = action.payload.message;
     });
     builder.addCase(ticketsUpdate.pending, (state) => {
       state.loading = true;
@@ -142,9 +147,10 @@ export const ticketSlice = createSlice({
       state.loading = false;
       state.isFetching = false;
     });
-    builder.addCase(viewTicket.rejected, (state) => {
+    builder.addCase(viewTicket.rejected, (state, action) => {
       state.loading = false;
       state.apiStatus = false;
+      state.error = action.payload.message;
     });
     builder.addCase(dashboardData.pending, (state) => {
       state.loading = true;
@@ -156,9 +162,10 @@ export const ticketSlice = createSlice({
       state.loading = false;
       state.isFetching = false;
     });
-    builder.addCase(dashboardData.rejected, (state) => {
+    builder.addCase(dashboardData.rejected, (state, action) => {
       state.loading = false;
       state.apiStatus = false;
+      state.error = action.payload.message;
     });
     builder.addCase(profileUpdate.pending, (state) => {
       state.loading = true;

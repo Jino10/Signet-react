@@ -27,14 +27,20 @@ export const userDetails = createAsyncThunk('user/userDetails', async (userId, {
   return rejectWithValue(data);
 });
 
-export const fetchUserRole = createAsyncThunk('user/fetchUserRole', async () => {
+export const fetchUserRole = createAsyncThunk('user/fetchUserRole', async ({ rejectWithValue }) => {
   const { 0: status, 1: res } = await makeRequest(APIUrlConstants.GET_USER_ROLES);
-  return { status, responseData: res.data };
+  if (status === httpStatusCode.SUCCESS) {
+    return { status, responseData: res.data };
+  }
+  return rejectWithValue(res);
 });
 
-export const fetchOrg = createAsyncThunk('user/fetchOrg', async (searchtext) => {
+export const fetchOrg = createAsyncThunk('user/fetchOrg', async (searchtext, { rejectWithValue }) => {
   const response = await makeRequest(`${APIUrlConstants.SEARCH_ORG}?company=${searchtext}`);
-  return { responseData: response };
+  if (response[0] === httpStatusCode.SUCCESS) {
+    return { responseData: response };
+  }
+  return rejectWithValue(response[1]);
 });
 
 export const createUser = createAsyncThunk('user/createUser', async ({ endPoint, user }, { rejectWithValue }) => {
@@ -45,9 +51,12 @@ export const createUser = createAsyncThunk('user/createUser', async ({ endPoint,
   return rejectWithValue(responseData);
 });
 
-export const fetchOrgNames = createAsyncThunk('user/fetchOrgName', async (searchtext) => {
+export const fetchOrgNames = createAsyncThunk('user/fetchOrgName', async (searchtext, { rejectWithValue }) => {
   const response = await makeRequest(`${APIUrlConstants.GET_ORG_NAME}?orgName=${searchtext}`);
-  return { responseData: response };
+  if (response[0] === httpStatusCode.SUCCESS) {
+    return { responseData: response };
+  }
+  return rejectWithValue(response[1]);
 });
 
 export const fullUserDetails = createAsyncThunk('user/fullUserDetails', async (id, { rejectWithValue }) => {
@@ -69,10 +78,13 @@ export const updateUserData = createAsyncThunk('user/updateUserData', async (use
   return rejectWithValue(data);
 });
 
-export const postData = createAsyncThunk('user/postData', async ({ optionval, msg, search, message }) => {
+export const postData = createAsyncThunk('user/postData', async ({ optionval, msg, search, message }, { rejectWithValue }) => {
   const response = await fetchCall(APIUrlConstants.POST_NOTIFICATION_API, apiMethods.POST, {
     alertMessage: optionval === 'all' ? msg : message,
     orgName: optionval === 'all' ? 'All' : search,
   });
-  return { responseData: response };
+  if (response[0] === httpStatusCode.SUCCESS) {
+    return { responseData: response };
+  }
+  return rejectWithValue(response[1]);
 });

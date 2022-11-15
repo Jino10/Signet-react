@@ -100,9 +100,10 @@ export const sessionSlice = createSlice({
       state.loading = false;
       state.isError = false;
     });
-    builder.addCase(resendOTP.rejected, (state) => {
+    builder.addCase(resendOTP.rejected, (state, action) => {
       state.loading = false;
       state.apiStatus = false;
+      state.error = action.payload.message;
     });
     builder.addCase(userLogout.pending, (state) => {
       state.loading = true;
@@ -113,9 +114,10 @@ export const sessionSlice = createSlice({
       state.loading = false;
       state.isFetching = false;
     });
-    builder.addCase(userLogout.rejected, (state) => {
+    builder.addCase(userLogout.rejected, (state, action) => {
       state.loading = false;
       state.apiStatus = false;
+      state.error = action.payload.message;
     });
     builder.addCase(chartData.pending, (state) => {
       state.loading = true;
@@ -155,9 +157,10 @@ export const sessionSlice = createSlice({
       state.apiStatus = action.payload.status;
       state.forgetPass = action.payload.responseData;
     });
-    builder.addCase(forgetData.rejected, (state) => {
+    builder.addCase(forgetData.rejected, (state, action) => {
       state.loading = false;
       state.apiStatus = false;
+      state.error = action.payload.message;
     });
     builder.addCase(getSSOUser.pending, (state) => {
       state.loading = true;
@@ -198,8 +201,9 @@ export const sessionSlice = createSlice({
       state.isFetching = false;
       state.updateNumberData = action.payload.responseData;
     });
-    builder.addCase(updatePhone.rejected, (state) => {
+    builder.addCase(updatePhone.rejected, (state, action) => {
       state.loading = false;
+      state.error = action.payload.message;
     });
     builder.addCase(resetData.pending, (state) => {
       state.loading = true;

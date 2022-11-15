@@ -13,29 +13,44 @@ export const userAllTickets = createAsyncThunk('ticket/userAllTickets', async (a
   return rejectWithValue(data);
 });
 
-export const fetchSiteData = createAsyncThunk('ticket/fetchSiteData', async () => {
+export const fetchSiteData = createAsyncThunk('ticket/fetchSiteData', async ({ rejectWithValue }) => {
   const fetchSitelist = await makeRequest(`${APIUrlConstants.LIST_SITES}?customerNo=${localStorage.getItem('orgNo')}`);
-  return fetchSitelist;
+  if (fetchSitelist[0] === httpStatusCode.SUCCESS) {
+    return fetchSitelist;
+  }
+  return rejectWithValue(fetchSitelist[1]);
 });
 
-export const fetchPriorityData = createAsyncThunk('ticket/fetchPriorityData', async () => {
+export const fetchPriorityData = createAsyncThunk('ticket/fetchPriorityData', async ({ rejectWithValue }) => {
   const fetchPriority = await makeRequest(APIUrlConstants.LIST_PRIORITY);
-  return fetchPriority;
+  if (fetchPriority[0] === httpStatusCode.SUCCESS) {
+    return fetchPriority;
+  }
+  return rejectWithValue(fetchPriority[1]);
 });
 
-export const fetchProblemData = createAsyncThunk('ticket/fetchProblemData', async () => {
+export const fetchProblemData = createAsyncThunk('ticket/fetchProblemData', async ({ rejectWithValue }) => {
   const fetchProblemcode = await makeRequest(APIUrlConstants.LIST_PROBLEM_CODE);
-  return fetchProblemcode;
+  if (fetchProblemcode[0] === httpStatusCode.SUCCESS) {
+    return fetchProblemcode;
+  }
+  return rejectWithValue(fetchProblemcode[1]);
 });
 
-export const fetchSystemData = createAsyncThunk('ticket/fetchSystemData', async () => {
+export const fetchSystemData = createAsyncThunk('ticket/fetchSystemData', async ({ rejectWithValue }) => {
   const fetchSystemType = await makeRequest(APIUrlConstants.LIST_SYSTEM_TYPE);
-  return fetchSystemType;
+  if (fetchSystemType[0] === httpStatusCode.SUCCESS) {
+    return fetchSystemType;
+  }
+  return rejectWithValue(fetchSystemType[1]);
 });
 
-export const fetchTicketData = createAsyncThunk('ticket/fetchTicketData', async (id) => {
+export const fetchTicketData = createAsyncThunk('ticket/fetchTicketData', async (id, { rejectWithValue }) => {
   const fetchTicketView = await makeRequest(`${APIUrlConstants.VIEW_TICKET}/${id}`);
-  return fetchTicketView;
+  if (fetchTicketView[0] === httpStatusCode.SUCCESS) {
+    return fetchTicketView;
+  }
+  return rejectWithValue(fetchTicketView[1]);
 });
 
 export const ticketsUpdate = createAsyncThunk('ticket/ticketsUpdate', async (ticketObject, { rejectWithValue }) => {
@@ -46,19 +61,25 @@ export const ticketsUpdate = createAsyncThunk('ticket/ticketsUpdate', async (tic
   return rejectWithValue(data);
 });
 
-export const viewTicket = createAsyncThunk('ticket/viewTicket', async (id) => {
+export const viewTicket = createAsyncThunk('ticket/viewTicket', async (id, { rejectWithValue }) => {
   const { 0: statusCode, 1: resp } = await makeRequest(`${APIUrlConstants.VIEW_TICKET}/${id}`);
-  return { status: statusCode, responseData: resp };
+  if (statusCode === httpStatusCode.SUCCESS) {
+    return { status: statusCode, responseData: resp };
+  }
+  return rejectWithValue(resp);
 });
 
 export const dashboardData = createAsyncThunk(
   'ticket/dashboardData',
-  async ({ url, customerName, customerNumber, type, date }) => {
+  async ({ url, customerName, customerNumber, type, date }, { rejectWithValue }) => {
     const {
       0: statusCode,
       1: { data },
     } = await makeRequest(`${url}?customerName=${customerName}&customerNumber=${customerNumber}&keyword=${type}&date=${date}`);
-    return { status: statusCode, responseData: data };
+    if (statusCode === httpStatusCode.SUCCESS) {
+      return { status: statusCode, responseData: data };
+    }
+    return rejectWithValue(data);
   },
 );
 

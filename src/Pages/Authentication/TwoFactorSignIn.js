@@ -106,7 +106,6 @@ function TwoFactorSignIn() {
           navigate('/tickets');
         }
       } else {
-        console.log('er');
         setIsLoading(false);
         setAlertShow(error);
         setAlertVarient('danger');

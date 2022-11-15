@@ -105,9 +105,10 @@ export const userSlice = createSlice({
       state.roleStatus = action.payload.status;
       state.roleDatas = action.payload.responseData;
     });
-    builder.addCase(fetchUserRole.rejected, (state) => {
+    builder.addCase(fetchUserRole.rejected, (state, action) => {
       state.loading = false;
       state.roleStatus = false;
+      state.errMsg = action.payload.message;
     });
     builder.addCase(fetchOrg.pending, (state) => {
       state.loading = true;
@@ -118,8 +119,9 @@ export const userSlice = createSlice({
       state.isFetching = false;
       state.orgData = action.payload.responseData;
     });
-    builder.addCase(fetchOrg.rejected, (state) => {
+    builder.addCase(fetchOrg.rejected, (state, action) => {
       state.loading = false;
+      state.errMsg = action.payload.message;
     });
     builder.addCase(createUser.pending, (state) => {
       state.loading = true;
@@ -175,8 +177,9 @@ export const userSlice = createSlice({
       state.isFetching = false;
       state.orgNames = action.payload.responseData;
     });
-    builder.addCase(fetchOrgNames.rejected, (state) => {
+    builder.addCase(fetchOrgNames.rejected, (state, action) => {
       state.loading = false;
+      state.errMsg = action.payload.message;
     });
     builder.addCase(postData.pending, (state) => {
       state.loading = true;
@@ -187,8 +190,9 @@ export const userSlice = createSlice({
       state.isFetching = false;
       state.postValues = action.payload.responseData;
     });
-    builder.addCase(postData.rejected, (state) => {
+    builder.addCase(postData.rejected, (state, action) => {
       state.loading = false;
+      state.errMsg = action.payload.message;
     });
   },
 });

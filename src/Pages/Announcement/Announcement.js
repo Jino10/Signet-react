@@ -33,7 +33,6 @@ export default function Announcement() {
 
   const { orgNames, postValues } = useSelector((state) => state.user);
 
-  // console.log(convertToRaw(editorState.getCurrentContent()));
   const handleClose = () => {
     setShow(false);
     window.location = '/announcement';

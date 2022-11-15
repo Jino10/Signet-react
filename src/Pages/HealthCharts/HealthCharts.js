@@ -238,7 +238,7 @@ export default function HealthCharts() {
                   className="progressWrapTicket"
                   variant="success"
                   now={((totalOpenTickets / numberOfTickets) * 100).toFixed()}
-                  // label={((totalOpenTickets / numberOfTickets) * 100).toFixed() + '%'}
+                // label={((totalOpenTickets / numberOfTickets) * 100).toFixed() + '%'}
                 />
               </div>
               <p className="text-12 progressValue"> {totalOpenTickets} </p>
@@ -252,7 +252,7 @@ export default function HealthCharts() {
                   className="progressWrapTicket"
                   variant="danger"
                   now={((totalInprocessTickets / numberOfTickets) * 100).toFixed()}
-                  // label={((totalInprocessTickets / numberOfTickets) * 100).toFixed() + '%'}
+                // label={((totalInprocessTickets / numberOfTickets) * 100).toFixed() + '%'}
                 />
               </div>
               <p className="text-12 progressValue"> {totalInprocessTickets} </p>
@@ -266,7 +266,7 @@ export default function HealthCharts() {
                   className="progressWrapTicket"
                   variant="warning"
                   now={((totalClosedTickets / numberOfTickets) * 100).toFixed()}
-                  // label={((totalClosedTickets / numberOfTickets) * 100).toFixed() + '%'}
+                // label={((totalClosedTickets / numberOfTickets) * 100).toFixed() + '%'}
                 />
               </div>
               <p className="text-12 progressValue"> {totalClosedTickets} </p>

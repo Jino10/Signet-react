@@ -22,14 +22,20 @@ export const twoFactorLogin = createAsyncThunk('session/twoFactorLogin', async (
   return rejectWithValue(data);
 });
 
-export const resendOTP = createAsyncThunk('session/resendOTP', async (id) => {
+export const resendOTP = createAsyncThunk('session/resendOTP', async (id, { rejectWithValue }) => {
   const [statusCode, response] = await fetchCall(`${APIUrlConstants.RESEND_OTP_EMAIL}/${id}`, apiMethods.POST);
-  return { status: statusCode, responseData: response };
+  if (statusCode === httpStatusCode.SUCCESS) {
+    return { status: statusCode, responseData: response };
+  }
+  return rejectWithValue(response);
 });
 
-export const userLogout = createAsyncThunk('session/userLogout', async (urlencoded) => {
+export const userLogout = createAsyncThunk('session/userLogout', async (urlencoded, { rejectWithValue }) => {
   const [statusCode, response] = await fetchCall(APIUrlConstants.LOGOUT_API, apiMethods.POST, urlencoded);
-  return { status: statusCode, responseData: response };
+  if (statusCode === httpStatusCode.SUCCESS) {
+    return { status: statusCode, responseData: response };
+  }
+  return rejectWithValue(response);
 });
 
 export const chartData = createAsyncThunk('ticket/chartData', async () => {
@@ -56,12 +62,15 @@ export const signUpAccount = createAsyncThunk(
   },
 );
 
-export const forgetData = createAsyncThunk('session/forgetData', async (stateData) => {
+export const forgetData = createAsyncThunk('session/forgetData', async (stateData, { rejectWithValue }) => {
   const { 0: statusCode, 1: responseData } = await fetchCall(
     APIUrlConstants.FORGET_PASSWORD_API + stateData.email,
     apiMethods.POST,
   );
-  return { status: statusCode, responseData };
+  if (statusCode === httpStatusCode.SUCCESS) {
+    return { status: statusCode, responseData };
+  }
+  return rejectWithValue(responseData);
 });
 
 export const getSSOUser = createAsyncThunk('session/getSSOUser', async (getUser, { rejectWithValue }) => {
@@ -80,9 +89,12 @@ export const updateSSOUser = createAsyncThunk('session/updateSSOUser', async (us
   return rejectWithValue(responseData);
 });
 
-export const updatePhone = createAsyncThunk('session/updatePhone', async (sendingdata) => {
+export const updatePhone = createAsyncThunk('session/updatePhone', async (sendingdata, { rejectWithValue }) => {
   const response = await fetchCall(APIUrlConstants.UPDATE_PROFILE, apiMethods.POST, sendingdata);
-  return { responseData: response };
+  if (response[0] === httpStatusCode.SUCCESS) {
+    return { responseData: response };
+  }
+  return rejectWithValue(response[1]);
 });
 
 export const resetData = createAsyncThunk('session/resetData', async (data, { rejectWithValue }) => {
@@ -132,18 +144,24 @@ export const fetchNotifyData = createAsyncThunk('session/fetchNotifyData', async
   return rejectWithValue(response);
 });
 
-export const removeNotifyData = createAsyncThunk('session/removeNotifyData', async (ids) => {
+export const removeNotifyData = createAsyncThunk('session/removeNotifyData', async (ids, { rejectWithValue }) => {
   const { 0: statuscode, 1: data } = await fetchCall(APIUrlConstants.REMOVE_NOTIFICATIONS, apiMethods.POST, {
     userId: localStorage.getItem('id'),
     notificationIds: ids,
   });
-  return { status: statuscode, responseData: data };
+  if (statuscode === httpStatusCode.SUCCESS) {
+    return { status: statuscode, responseData: data };
+  }
+  return rejectWithValue(data);
 });
 
-export const removeData = createAsyncThunk('session/removeData', async (liveNotification) => {
+export const removeData = createAsyncThunk('session/removeData', async (liveNotification, { rejectWithValue }) => {
   const { 0: statusCode, 1: data } = await fetchCall(APIUrlConstants.REMOVE_NOTIFICATIONS, apiMethods.POST, {
     userId: localStorage.getItem('id'),
     notificationIds: [liveNotification[0].id],
   });
-  return { status: statusCode, responseData: data };
+  if (statusCode === httpStatusCode.SUCCESS) {
+    return { status: statusCode, responseData: data };
+  }
+  return rejectWithValue(data);
 });

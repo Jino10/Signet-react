@@ -39,7 +39,7 @@ export const components = {
   PROFILE: 'PROFILE',
   PRIVACY_POLICY: 'PRIVACY_POLICY',
   TERMS_CONDITIONS: 'TERMS_CONDITIONS',
-  CHARTDATA: 'CHARTDATA'
+  CHARTDATA: 'CHARTDATA',
 };
 
 export const gaEvents = {
@@ -90,7 +90,7 @@ export const gaEvents = {
   OPEN_APP_STORE: 'navigate_app_store',
   PRIVACY_POLICY: 'navigate_privacy_policy',
   TERMS_CONDITIONS: 'navigate_terms_and_conditions',
-  CHARTDATA: 'navigate_chartdata'
+  CHARTDATA: 'navigate_chartdata',
 };
 
 export const aboutSignet =

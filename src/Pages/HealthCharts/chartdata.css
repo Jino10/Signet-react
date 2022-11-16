@@ -1,22 +1,22 @@
 .graphData {
-    height: 25%;
-    width: 35%;
-    margin-top: 5%;
-    border: 1px dashed black;
-    border-radius: 5%;
+  height: 25%;
+  width: 35%;
+  margin-top: 5%;
+  border: 1px dashed black;
+  border-radius: 5%;
 }
 
 .wrapperGraph {
-    display: flex;
-    align-items: center;
-    justify-content: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .typeData {
-    padding: 15px;
-    color: #16216c;
-    font-weight: bold;
-    text-transform: uppercase;
-    letter-spacing: 5px;
-    text-align: center;
+  padding: 15px;
+  color: #16216c;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 5px;
+  text-align: center;
 }

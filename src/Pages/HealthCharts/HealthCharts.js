@@ -244,7 +244,7 @@ export default function HealthCharts() {
                   className="progressWrapTicket"
                   variant="success"
                   now={((totalOpenTickets / numberOfTickets) * 100).toFixed()}
-                // label={((totalOpenTickets / numberOfTickets) * 100).toFixed() + '%'}
+                  // label={((totalOpenTickets / numberOfTickets) * 100).toFixed() + '%'}
                 />
               </div>
               <p className="text-12 progressValue"> {totalOpenTickets} </p>
@@ -258,7 +258,7 @@ export default function HealthCharts() {
                   className="progressWrapTicket"
                   variant="danger"
                   now={((totalInprocessTickets / numberOfTickets) * 100).toFixed()}
-                // label={((totalInprocessTickets / numberOfTickets) * 100).toFixed() + '%'}
+                  // label={((totalInprocessTickets / numberOfTickets) * 100).toFixed() + '%'}
                 />
               </div>
               <p className="text-12 progressValue"> {totalInprocessTickets} </p>
@@ -272,7 +272,7 @@ export default function HealthCharts() {
                   className="progressWrapTicket"
                   variant="warning"
                   now={((totalClosedTickets / numberOfTickets) * 100).toFixed()}
-                // label={((totalClosedTickets / numberOfTickets) * 100).toFixed() + '%'}
+                  // label={((totalClosedTickets / numberOfTickets) * 100).toFixed() + '%'}
                 />
               </div>
               <p className="text-12 progressValue"> {totalClosedTickets} </p>
@@ -288,13 +288,13 @@ export default function HealthCharts() {
     setTypes(value);
     setShow(true);
     if (value === 'systemAvailability') {
-      setFetchData(systemAvailability)
+      setFetchData(systemAvailability);
     } else if (value === 'systemCapacity' || value === 'systemCapacityCopy') {
       setFetchData(systemCapacity);
     } else {
       setFetchData(q360Data);
     }
-  }
+  };
 
   return (
     <div>
@@ -313,9 +313,15 @@ export default function HealthCharts() {
                 <div className="cardWrapper">
                   <div className="cardHeader d-flex">
                     <h6>Tickets by Site</h6>
-                    <div className='expandIcons'>
-                      <Link to='/chartdata/ticketBySite' target='_blank'><img src='/images/expand.svg' alt='' className='mx-3' /></Link>
-                      <img src={process.env.REACT_APP_PUBLIC_URL + 'images/dashboard/expand.svg'} alt="" onClick={() => openModal('ticketBySite', q360Data)} />
+                    <div className="expandIcons">
+                      <Link to="/chartdata/ticketBySite" target="_blank">
+                        <img src="/images/expand.svg" alt="" className="mx-3" />
+                      </Link>
+                      <img
+                        src={process.env.REACT_APP_PUBLIC_URL + 'images/dashboard/expand.svg'}
+                        alt=""
+                        onClick={() => openModal('ticketBySite', q360Data)}
+                      />
                     </div>
                   </div>
                   {isLoading ? renderSpinner() : renderChart('ticketBySite', q360Data)}
@@ -326,9 +332,15 @@ export default function HealthCharts() {
                 <div className="cardWrapper d-flex flex-column justify-content-between">
                   <div className="cardHeader d-flex align-items-center justify-content-between">
                     <h6>Tickets by Priority</h6>
-                    <div className='expandIcons'>
-                      <Link to='/chartdata/ticketByPriority' target='_blank'><img src='/images/expand.svg' alt='' className='mx-3' /></Link>
-                      <img src={process.env.REACT_APP_PUBLIC_URL + 'images/dashboard/expand.svg'} alt="" onClick={() => openModal('ticketByPriority', q360Data)} />
+                    <div className="expandIcons">
+                      <Link to="/chartdata/ticketByPriority" target="_blank">
+                        <img src="/images/expand.svg" alt="" className="mx-3" />
+                      </Link>
+                      <img
+                        src={process.env.REACT_APP_PUBLIC_URL + 'images/dashboard/expand.svg'}
+                        alt=""
+                        onClick={() => openModal('ticketByPriority', q360Data)}
+                      />
                     </div>
                   </div>
                   <div className="h-100 d-flex flex-column justify-content-center">
@@ -340,9 +352,15 @@ export default function HealthCharts() {
                 <div className="cardWrapper heightAuto">
                   <div className="cardHeader d-flex align-items-center justify-content-between noBM">
                     <h6>Tickets by Status</h6>
-                    <div className='expandIcons'>
-                      <Link to='/chartdata/ticketsByStatus' target='_blank'><img src='/images/expand.svg' alt='' className='mx-3' /></Link>
-                      <img src={process.env.REACT_APP_PUBLIC_URL + 'images/dashboard/expand.svg'} alt="" onClick={() => openModal('ticketsByStatus', q360Data)} />
+                    <div className="expandIcons">
+                      <Link to="/chartdata/ticketsByStatus" target="_blank">
+                        <img src="/images/expand.svg" alt="" className="mx-3" />
+                      </Link>
+                      <img
+                        src={process.env.REACT_APP_PUBLIC_URL + 'images/dashboard/expand.svg'}
+                        alt=""
+                        onClick={() => openModal('ticketsByStatus', q360Data)}
+                      />
                     </div>
                   </div>
                   {isLoading ? renderSpinner() : renderChart('ticketsByStatus', q360Data)}
@@ -352,9 +370,15 @@ export default function HealthCharts() {
                 <div className="cardWrapper">
                   <div className="cardHeader d-flex align-items-center justify-content-between">
                     <h6>System Availability</h6>
-                    <div className='expandIcons'>
-                      <Link to='/chartdata/systemAvailability' target='_blank'><img src='/images/expand.svg' alt='' className='mx-3' /></Link>
-                      <img src={process.env.REACT_APP_PUBLIC_URL + 'images/dashboard/expand.svg'} alt="" onClick={() => openModal('systemAvailability', systemAvailability)} />
+                    <div className="expandIcons">
+                      <Link to="/chartdata/systemAvailability" target="_blank">
+                        <img src="/images/expand.svg" alt="" className="mx-3" />
+                      </Link>
+                      <img
+                        src={process.env.REACT_APP_PUBLIC_URL + 'images/dashboard/expand.svg'}
+                        alt=""
+                        onClick={() => openModal('systemAvailability', systemAvailability)}
+                      />
                     </div>
                   </div>
                   {isLoading ? renderSpinner() : renderChart('systemAvailability', systemAvailability)}
@@ -365,9 +389,15 @@ export default function HealthCharts() {
                 <div className="cardWrapper d-flex flex-column justify-content-between">
                   <div className="cardHeader d-flex align-items-center justify-content-between">
                     <h6>System Capacity</h6>
-                    <div className='expandIcons'>
-                      <Link to='/chartdata/systemCapacity' target='_blank'><img src='/images/expand.svg' alt='' className='mx-3' /></Link>
-                      <img src={process.env.REACT_APP_PUBLIC_URL + 'images/dashboard/expand.svg'} alt="" onClick={() => openModal('systemCapacity', systemCapacity)} />
+                    <div className="expandIcons">
+                      <Link to="/chartdata/systemCapacity" target="_blank">
+                        <img src="/images/expand.svg" alt="" className="mx-3" />
+                      </Link>
+                      <img
+                        src={process.env.REACT_APP_PUBLIC_URL + 'images/dashboard/expand.svg'}
+                        alt=""
+                        onClick={() => openModal('systemCapacity', systemCapacity)}
+                      />
                     </div>
                   </div>
                   <div className="h-100 d-flex flex-column justify-content-center">
@@ -380,9 +410,15 @@ export default function HealthCharts() {
                 <div className="cardWrapper heightAuto">
                   <div className="cardHeader d-flex align-items-center justify-content-between">
                     <h6>System Capacity (Copy)</h6>
-                    <div className='expandIcons'>
-                      <Link to='/chartdata/systemCapacityCopy' target='_blank'><img src='/images/expand.svg' alt='' className='mx-3' /></Link>
-                      <img src={process.env.REACT_APP_PUBLIC_URL + 'images/dashboard/expand.svg'} alt="" onClick={() => openModal('systemCapacityCopy', systemCapacity)} />
+                    <div className="expandIcons">
+                      <Link to="/chartdata/systemCapacityCopy" target="_blank">
+                        <img src="/images/expand.svg" alt="" className="mx-3" />
+                      </Link>
+                      <img
+                        src={process.env.REACT_APP_PUBLIC_URL + 'images/dashboard/expand.svg'}
+                        alt=""
+                        onClick={() => openModal('systemCapacityCopy', systemCapacity)}
+                      />
                     </div>
                   </div>
                   {isLoading ? renderSpinner() : renderChart('systemCapacityCopy', systemCapacity)}
@@ -393,15 +429,9 @@ export default function HealthCharts() {
         </div>
       )}
       <div>
-        <Modal show={show} onHide={handleClose}
-          size='md'
-          aria-labelledby="contained-modal-title-vcenter"
-          centered
-        >
+        <Modal show={show} onHide={handleClose} size="md" aria-labelledby="contained-modal-title-vcenter" centered>
           <Modal.Header closeButton />
-          <Modal.Body className='modalData'>
-            {renderChart(types, fetchData)}
-          </Modal.Body>
+          <Modal.Body className="modalData">{renderChart(types, fetchData)}</Modal.Body>
         </Modal>
       </div>
     </div>

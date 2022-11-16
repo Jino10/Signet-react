@@ -25,6 +25,7 @@ import { useLocation } from 'react-router-dom';
 import ReactGA from 'react-ga4';
 import PrivacyPolicy from './Pages/PrivacyPolicy/PrivacyPolicy';
 import TermsAndConditions from './Pages/TermsAndConditions/TermsAndConditions';
+import ChartData from './Pages/HealthCharts/ChartData';
 
 function Layout(props) {
   const { component } = props;
@@ -54,6 +55,8 @@ function Layout(props) {
       return <OTPVerification />;
     case components.RESET:
       return <ResetPassword />;
+    case components.CHARTDATA:
+      return <ChartData />;
     case components.DASHBOARD:
       return LayoutWithHeader(<Dashboard />);
     case components.ANNOUNCEMENT:

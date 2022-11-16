@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Row, Col, ProgressBar, OverlayTrigger, Tooltip, Spinner } from 'react-bootstrap';
+import { Row, Col, ProgressBar, OverlayTrigger, Tooltip, Spinner, Modal } from 'react-bootstrap';
 import './HealthCharts.css';
 import DoughnutChart from '../../Charts/DoughnutChart';
 import VerticalBarChart from '../../Charts/VerticalBarChart';
@@ -12,6 +12,7 @@ import NetworkHealth from '../NetworkHealth/NetworkHealth';
 import { setTickets } from '../../Redux-Toolkit/ticketSlice';
 import { dashboardData } from '../../Redux-Toolkit/ticketSlice/action';
 import { useDispatch, useSelector } from 'react-redux';
+import { Link } from 'react-router-dom';
 
 export default function HealthCharts() {
   const [reload, setReload] = useState(false);
@@ -21,6 +22,11 @@ export default function HealthCharts() {
   const [systemAvailability, setSystemAvailability] = useState({});
   const roledId = localStorage.getItem('roleId');
   const dispatch = useDispatch();
+
+  const [show, setShow] = useState(false);
+  const handleClose = () => setShow(false);
+  const [types, setTypes] = useState('');
+  const [fetchData, setFetchData] = useState('');
 
   const { apiStatus, chartData } = useSelector((state) => state.ticket);
 
@@ -92,11 +98,11 @@ export default function HealthCharts() {
     </Tooltip>
   );
 
-  const renderNoDataFound = () => (
-    <div className="cardBody d-flex align-items-center justify-content-center w-100">
-      <span>No data found</span>
-    </div>
-  );
+  // const renderNoDataFound = () => (
+  //   <div className="cardBody d-flex align-items-center justify-content-center w-100">
+  //     <span>No data found</span>
+  //   </div>
+  // );
 
   const renderSpinner = () => (
     <div className="cardBody d-flex align-items-center justify-content-center w-100">
@@ -275,8 +281,20 @@ export default function HealthCharts() {
         </div>
       );
     }
-    return renderNoDataFound();
+    return renderSpinner();
   };
+
+  const openModal = (value) => {
+    setTypes(value);
+    setShow(true);
+    if (value === 'systemAvailability') {
+      setFetchData(systemAvailability)
+    } else if (value === 'systemCapacity' || value === 'systemCapacityCopy') {
+      setFetchData(systemCapacity);
+    } else {
+      setFetchData(q360Data);
+    }
+  }
 
   return (
     <div>
@@ -293,9 +311,12 @@ export default function HealthCharts() {
             <Row>
               <Col lg={6} md={12} sm={12} xs={12} className="mb-4">
                 <div className="cardWrapper">
-                  <div className="cardHeader d-flex align-items-center justify-content-between">
+                  <div className="cardHeader d-flex">
                     <h6>Tickets by Site</h6>
-                    <img src={process.env.REACT_APP_PUBLIC_URL + 'images/dashboard/expand.svg'} alt="" />
+                    <div className='expandIcons'>
+                      <Link to='/chartdata/ticketBySite' target='_blank'><img src='/images/expand.svg' alt='' className='mx-3' /></Link>
+                      <img src={process.env.REACT_APP_PUBLIC_URL + 'images/dashboard/expand.svg'} alt="" onClick={() => openModal('ticketBySite', q360Data)} />
+                    </div>
                   </div>
                   {isLoading ? renderSpinner() : renderChart('ticketBySite', q360Data)}
                 </div>
@@ -305,7 +326,10 @@ export default function HealthCharts() {
                 <div className="cardWrapper d-flex flex-column justify-content-between">
                   <div className="cardHeader d-flex align-items-center justify-content-between">
                     <h6>Tickets by Priority</h6>
-                    <img src={process.env.REACT_APP_PUBLIC_URL + 'images/dashboard/expand.svg'} alt="" />
+                    <div className='expandIcons'>
+                      <Link to='/chartdata/ticketByPriority' target='_blank'><img src='/images/expand.svg' alt='' className='mx-3' /></Link>
+                      <img src={process.env.REACT_APP_PUBLIC_URL + 'images/dashboard/expand.svg'} alt="" onClick={() => openModal('ticketByPriority', q360Data)} />
+                    </div>
                   </div>
                   <div className="h-100 d-flex flex-column justify-content-center">
                     {isLoading ? renderSpinner() : renderChart('ticketByPriority', q360Data)}
@@ -316,7 +340,10 @@ export default function HealthCharts() {
                 <div className="cardWrapper heightAuto">
                   <div className="cardHeader d-flex align-items-center justify-content-between noBM">
                     <h6>Tickets by Status</h6>
-                    <img src={process.env.REACT_APP_PUBLIC_URL + 'images/dashboard/expand.svg'} alt="" />
+                    <div className='expandIcons'>
+                      <Link to='/chartdata/ticketsByStatus' target='_blank'><img src='/images/expand.svg' alt='' className='mx-3' /></Link>
+                      <img src={process.env.REACT_APP_PUBLIC_URL + 'images/dashboard/expand.svg'} alt="" onClick={() => openModal('ticketsByStatus', q360Data)} />
+                    </div>
                   </div>
                   {isLoading ? renderSpinner() : renderChart('ticketsByStatus', q360Data)}
                 </div>
@@ -325,7 +352,10 @@ export default function HealthCharts() {
                 <div className="cardWrapper">
                   <div className="cardHeader d-flex align-items-center justify-content-between">
                     <h6>System Availability</h6>
-                    <img src={process.env.REACT_APP_PUBLIC_URL + 'images/dashboard/expand.svg'} alt="" />
+                    <div className='expandIcons'>
+                      <Link to='/chartdata/systemAvailability' target='_blank'><img src='/images/expand.svg' alt='' className='mx-3' /></Link>
+                      <img src={process.env.REACT_APP_PUBLIC_URL + 'images/dashboard/expand.svg'} alt="" onClick={() => openModal('systemAvailability', systemAvailability)} />
+                    </div>
                   </div>
                   {isLoading ? renderSpinner() : renderChart('systemAvailability', systemAvailability)}
                 </div>
@@ -335,7 +365,10 @@ export default function HealthCharts() {
                 <div className="cardWrapper d-flex flex-column justify-content-between">
                   <div className="cardHeader d-flex align-items-center justify-content-between">
                     <h6>System Capacity</h6>
-                    <img src={process.env.REACT_APP_PUBLIC_URL + 'images/dashboard/expand.svg'} alt="" />
+                    <div className='expandIcons'>
+                      <Link to='/chartdata/systemCapacity' target='_blank'><img src='/images/expand.svg' alt='' className='mx-3' /></Link>
+                      <img src={process.env.REACT_APP_PUBLIC_URL + 'images/dashboard/expand.svg'} alt="" onClick={() => openModal('systemCapacity', systemCapacity)} />
+                    </div>
                   </div>
                   <div className="h-100 d-flex flex-column justify-content-center">
                     {isLoading ? renderSpinner() : renderChart('systemCapacity', systemCapacity)}
@@ -347,7 +380,10 @@ export default function HealthCharts() {
                 <div className="cardWrapper heightAuto">
                   <div className="cardHeader d-flex align-items-center justify-content-between">
                     <h6>System Capacity (Copy)</h6>
-                    <img src={process.env.REACT_APP_PUBLIC_URL + 'images/dashboard/expand.svg'} alt="" />
+                    <div className='expandIcons'>
+                      <Link to='/chartdata/systemCapacityCopy' target='_blank'><img src='/images/expand.svg' alt='' className='mx-3' /></Link>
+                      <img src={process.env.REACT_APP_PUBLIC_URL + 'images/dashboard/expand.svg'} alt="" onClick={() => openModal('systemCapacityCopy', systemCapacity)} />
+                    </div>
                   </div>
                   {isLoading ? renderSpinner() : renderChart('systemCapacityCopy', systemCapacity)}
                 </div>
@@ -356,6 +392,18 @@ export default function HealthCharts() {
           </div>
         </div>
       )}
+      <div>
+        <Modal show={show} onHide={handleClose}
+          size='md'
+          aria-labelledby="contained-modal-title-vcenter"
+          centered
+        >
+          <Modal.Header closeButton />
+          <Modal.Body className='modalData'>
+            {renderChart(types, fetchData)}
+          </Modal.Body>
+        </Modal>
+      </div>
     </div>
   );
 }

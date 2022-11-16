@@ -95,6 +95,7 @@ function App() {
           <Route exact path="/twofactor" element={<Layout component={components.TWO_FACTOR} />} />
           <Route exact path="/privacypolicy" element={<Layout component={components.PRIVACY_POLICY} />} />
           <Route exact path="/termsandconditions" element={<Layout component={components.TERMS_CONDITIONS} />} />
+          <Route exact path="/chartdata/:chartType" element={<Layout component={components.CHARTDATA} />} />
         </Routes>
       </Security>
     </Router>
